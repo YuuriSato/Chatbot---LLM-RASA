@@ -1,0 +1,32 @@
+[
+  {
+    "file": "image1.png",
+    "path": "C:\\Users\\yuris\\Downloads\\image1.png",
+    "result": "VEREDITO: NAO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem parece ser uma foto real de uma dentadura."
+  },
+  {
+    "file": "vanessa 02.jpeg",
+    "path": "C:\\Users\\yuris\\Downloads\\vanessa 02.jpeg",
+    "result": "VEREDITO: NAO ALTERADA\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem parece ser uma foto real de dentes."
+  },
+  {
+    "file": "eeffff65456bf8e742dd34884212830ecdac60655844b90f124981680e6812bf.jpeg",
+    "path": "C:\\Users\\yuris\\Downloads\\eeffff65456bf8e742dd34884212830ecdac60655844b90f124981680e6812bf.jpeg",
+    "result": "VEREDITO: NAO ALTERADA\nCONFIANCA: alta\nJUSTIFICATIVA: Imagem de dentes naturais."
+  },
+  {
+    "file": "Pasted Graphic 2.jpg.jpeg",
+    "path": "C:\\Users\\yuris\\Downloads\\Pasted Graphic 2.jpg.jpeg",
+    "result": "VEREDITO: NAO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem parece ser uma foto real de um dente."
+  },
+  {
+    "file": "vanessa c.jpeg",
+    "path": "C:\\Users\\yuris\\Downloads\\vanessa c.jpeg",
+    "result": "VEREDITO: NAO ALTERADA\nCONFIANCA: alta\nJUSTIFICATIVA: Imagem de dentes naturais."
+  },
+  {
+    "file": "whatsapp image 2026-06-10 at 13.09.12.jpeg",
+    "path": "C:\\Users\\yuris\\Downloads\\whatsapp image 2026-06-10 at 13.09.12.jpeg",
+    "result": "VEREDITO: NAO ALTERADA\nCONFIANCA: alta\nJUSTIFICATIVA: Imagem de dentes naturais."
+  }
+]

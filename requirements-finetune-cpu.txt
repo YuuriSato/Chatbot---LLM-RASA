@@ -1,0 +1,6 @@
+accelerate
+datasets
+peft
+pillow
+torch
+transformers>=4.50.0

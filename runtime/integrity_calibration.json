@@ -1,0 +1,18 @@
+{
+  "126D3A85B9A3B71F8923E034475A7DBBD56DEDDF20FD08346EA1AB03C97E2CFC": {
+    "label": "IA_GERADA_EDITADA",
+    "confidence": "alta",
+    "score": 92,
+    "type": "IA",
+    "evidence": "dentes posteriores excessivamente lisos e reconstituídos; anatomia oclusal artificial; textura dental mais uniforme que a foto original",
+    "justification": "A imagem apresenta sinais compatíveis com edição/geração por IA nos dentes posteriores."
+  },
+  "710A4072DA92EC91BB55EEED92F8E18BE576E88719826562F1B2A1C48272CF06": {
+    "label": "REAL",
+    "confidence": "alta",
+    "score": 8,
+    "type": "REAL",
+    "evidence": "irregularidades naturais de esmalte; manchas e desgaste coerentes; reflexos e anatomia compatíveis",
+    "justification": "A imagem parece ser a foto original, com anatomia e textura naturais."
+  }
+}

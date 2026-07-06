@@ -1,0 +1,8 @@
+﻿"imagem","caminho_local","url_local","modelo","veredito","confianca","justificativa"
+"image1.png","C:\Okta7\Chatbot_ImageVision\runtime\uploads\f8c671d9fe8f4ba29c00f166036d6a89.png","/uploads/f8c671d9fe8f4ba29c00f166036d6a89.png","medgemma1.5:4b","NAO","alta","A imagem parece ser uma foto real de uma dentadura."
+"vanessa 02.jpeg","C:\Okta7\Chatbot_ImageVision\runtime\uploads\84e63be1cad3422582c5d577ed24a080.jpeg","/uploads/84e63be1cad3422582c5d577ed24a080.jpeg","medgemma1.5:4b","NAO ALTERADA","alta","A imagem parece ser uma foto real de dentes."
+"eeffff65456bf8e742dd34884212830ecdac60655844b90f124981680e6812bf.jpeg","C:\Okta7\Chatbot_ImageVision\runtime\uploads\68be96aca1ad4a43936bf46199d9a8a0.jpeg","/uploads/68be96aca1ad4a43936bf46199d9a8a0.jpeg","medgemma1.5:4b","NAO ALTERADA","alta","Imagem de dentes naturais."
+"Pasted Graphic 2.jpg.jpeg","C:\Okta7\Chatbot_ImageVision\runtime\uploads\b243dfb3123447859887518de45afbe9.jpeg","/uploads/b243dfb3123447859887518de45afbe9.jpeg","medgemma1.5:4b","NAO","alta","A imagem parece ser uma foto real de um dente."
+"vanessa c.jpeg","C:\Okta7\Chatbot_ImageVision\runtime\uploads\2da8788bfb1a4d668cfe2fb7532d2b81.jpeg","/uploads/2da8788bfb1a4d668cfe2fb7532d2b81.jpeg","medgemma1.5:4b","NAO ALTERADA","alta","Imagem de dentes naturais."
+"whatsapp image 2026-06-10 at 13.09.12.jpeg","C:\Okta7\Chatbot_ImageVision\runtime\uploads\04727d82f2874c5c81a2e81892a42c65.jpeg","/uploads/04727d82f2874c5c81a2e81892a42c65.jpeg","medgemma1.5:4b","NAO ALTERADA","alta","Imagem de dentes naturais."
+

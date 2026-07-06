@@ -1,0 +1,321 @@
+[
+  {
+    "id": "1129721a0cc94af29fdeda1d5e1a8c8a",
+    "created_at": "2026-07-06 09:22:02",
+    "filename": "vanessa c.jpeg",
+    "stored_filename": "1129721a0cc94af29fdeda1d5e1a8c8a.jpeg",
+    "image_url": "/uploads/1129721a0cc94af29fdeda1d5e1a8c8a.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta modificacao visual detectada, como linha, seta, desenho ou anotacao sobreposta.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 80\nEVIDENCIAS: linha ou seta verde sobreposta detectada",
+    "duration_seconds": "0.23",
+    "source": "forense_local",
+    "forensic_score": 80,
+    "forensic_evidence": [
+      "linha ou seta verde sobreposta detectada"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.415,
+      "ela_p95": 4.0,
+      "ela_block_cv": 0.293,
+      "laplacian_var": 307.432,
+      "sharpness_block_cv": 0.808,
+      "noise_mean": 2.277,
+      "noise_block_cv": 0.654,
+      "saturated_overlay_ratio": 0.00324,
+      "marker_overlay_ratio": 0.00271,
+      "green_marker_ratio": 0.00046,
+      "dhash": "0c9c9c9c949cbc3c",
+      "nearest_calibration_distance": 24
+    }
+  },
+  {
+    "id": "5320a8c3ca5e4574b297374f976a1550",
+    "created_at": "2026-07-06 00:22:50",
+    "filename": "vanessa c.jpeg",
+    "stored_filename": "5320a8c3ca5e4574b297374f976a1550.jpeg",
+    "image_url": "/uploads/5320a8c3ca5e4574b297374f976a1550.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta modificacao visual detectada, como linha, seta, desenho ou anotacao sobreposta.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 80\nEVIDENCIAS: linha ou seta verde sobreposta detectada",
+    "duration_seconds": "0.22",
+    "source": "forense_local",
+    "forensic_score": 80,
+    "forensic_evidence": [
+      "linha ou seta verde sobreposta detectada"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.415,
+      "ela_p95": 4.0,
+      "ela_block_cv": 0.293,
+      "laplacian_var": 307.432,
+      "sharpness_block_cv": 0.808,
+      "noise_mean": 2.277,
+      "noise_block_cv": 0.654,
+      "saturated_overlay_ratio": 0.00324,
+      "marker_overlay_ratio": 0.00271,
+      "green_marker_ratio": 0.00046,
+      "dhash": "0c9c9c9c949cbc3c",
+      "nearest_calibration_distance": 24
+    }
+  },
+  {
+    "id": "6f6e590d46ad46b882d5c0afbed32fe4",
+    "created_at": "2026-07-06 00:19:00",
+    "filename": "eeffff65456bf8e742dd34884212830ecdac60655844b90f124981680e6812bf.jpeg",
+    "stored_filename": "6f6e590d46ad46b882d5c0afbed32fe4.jpeg",
+    "image_url": "/uploads/6f6e590d46ad46b882d5c0afbed32fe4.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta baixa pontuacao local de alteracao e nao ha evidencias fortes de manipulacao.\nTIPO: REAL\nSCORE_ALTERACAO: 29\nEVIDENCIAS: sem sinais locais fortes de edicao; LLM: sem evidencias adicionais informadas",
+    "duration_seconds": "185.24",
+    "source": "hibrido_local_llm",
+    "forensic_score": 12,
+    "forensic_evidence": [
+      "sem sinais locais fortes de edicao"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.398,
+      "ela_p95": 4.0,
+      "ela_block_cv": 0.313,
+      "laplacian_var": 175.572,
+      "sharpness_block_cv": 0.597,
+      "noise_mean": 1.77,
+      "noise_block_cv": 0.602,
+      "saturated_overlay_ratio": 3e-05,
+      "dhash": "f0f1e9e5edcd1b9b",
+      "nearest_calibration_distance": 29
+    }
+  },
+  {
+    "id": "2544ad7c424c4c8184de2859be890013",
+    "created_at": "2026-07-05 23:55:45",
+    "filename": "Pasted Graphic 2.jpg.jpeg",
+    "stored_filename": "2544ad7c424c4c8184de2859be890013.jpeg",
+    "image_url": "/uploads/2544ad7c424c4c8184de2859be890013.jpeg",
+    "original_filename": "whatsapp image 2026-06-10 at 13.09.12.jpeg",
+    "original_stored_filename": "95bb982b706a49a296dc568b0545c356.jpeg",
+    "original_image_url": "/uploads/95bb982b706a49a296dc568b0545c356.jpeg",
+    "model": "codex-dental:latest",
+    "verdict": "IA_GERADA_EDITADA",
+    "report": "VEREDITO: IA_GERADA_EDITADA\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem apresenta sinais compatíveis com edição/geração por IA nos dentes posteriores.\nTIPO: IA\nSCORE_ALTERACAO: 92\nEVIDENCIAS: dentes posteriores excessivamente lisos e reconstituídos; anatomia oclusal artificial; textura dental mais uniforme que a foto original",
+    "duration_seconds": "0.24",
+    "source": "calibracao_sha256",
+    "forensic_score": 92,
+    "forensic_evidence": [
+      "dentes posteriores excessivamente lisos e reconstituídos; anatomia oclusal artificial; textura dental mais uniforme que a foto original"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "85d8b0491b024f5ea884cdd03af77852",
+    "created_at": "2026-07-03 16:11:27",
+    "filename": "vanessa c.jpeg",
+    "stored_filename": "85d8b0491b024f5ea884cdd03af77852.jpeg",
+    "image_url": "/uploads/85d8b0491b024f5ea884cdd03af77852.jpeg",
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 50\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "duration_seconds": "146.48",
+    "source": "llm",
+    "forensic_score": 50,
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "08d5ebb72e724259b93a06fa324d7aea",
+    "created_at": "2026-07-03 10:36:21",
+    "filename": "eeffff65456bf8e742dd34884212830ecdac60655844b90f124981680e6812bf.jpeg",
+    "stored_filename": "08d5ebb72e724259b93a06fa324d7aea.jpeg",
+    "image_url": "/uploads/08d5ebb72e724259b93a06fa324d7aea.jpeg",
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 50\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "duration_seconds": "141.48",
+    "forensic_score": 50,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "69ed08e1b3af49dbbc20e9054b1b4473",
+    "created_at": "2026-07-03 10:18:50",
+    "filename": "Pasted Graphic 2.jpg.jpeg",
+    "stored_filename": "69ed08e1b3af49dbbc20e9054b1b4473.jpeg",
+    "image_url": "/uploads/69ed08e1b3af49dbbc20e9054b1b4473.jpeg",
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 50\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "duration_seconds": "124.18",
+    "forensic_score": 50,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "e7e25146429248ff9d7bb7001de562c3",
+    "created_at": "2026-07-03 00:41:04",
+    "filename": "image1.png",
+    "stored_filename": "e7e25146429248ff9d7bb7001de562c3.png",
+    "image_url": "/uploads/e7e25146429248ff9d7bb7001de562c3.png",
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 50\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "duration_seconds": "104.78",
+    "forensic_score": 50,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "92c72cf106c94dc6b19453c1ac69c09f",
+    "created_at": "2026-07-02 22:50:13",
+    "filename": "11.jpg",
+    "stored_filename": "92c72cf106c94dc6b19453c1ac69c09f.jpg",
+    "image_url": "/uploads/92c72cf106c94dc6b19453c1ac69c09f.jpg",
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 50\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "duration_seconds": "122.89",
+    "forensic_score": 50,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "00b5d24291dd4856bd033937c5a3c7dd",
+    "created_at": "2026-07-02 22:40:35",
+    "filename": "1.jpg",
+    "stored_filename": "00b5d24291dd4856bd033937c5a3c7dd.jpg",
+    "image_url": "/uploads/00b5d24291dd4856bd033937c5a3c7dd.jpg",
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 50\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "duration_seconds": "115.83",
+    "forensic_score": 50,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "5bebe25889d54c18a98eae2cf17d9078",
+    "created_at": "2026-07-02 22:32:43",
+    "filename": "Pasted Graphic 2.jpg.jpeg",
+    "stored_filename": "5bebe25889d54c18a98eae2cf17d9078.jpeg",
+    "image_url": "/uploads/5bebe25889d54c18a98eae2cf17d9078.jpeg",
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 50\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "duration_seconds": "114.13",
+    "forensic_score": 50,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "f8c671d9fe8f4ba29c00f166036d6a89",
+    "created_at": "2026-07-02 16:27:06",
+    "filename": "image1.png",
+    "stored_filename": "f8c671d9fe8f4ba29c00f166036d6a89.png",
+    "image_url": "/uploads/f8c671d9fe8f4ba29c00f166036d6a89.png",
+    "model": "medgemma1.5:4b",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem parece ser uma foto real de uma dentadura.\nTIPO: REAL\nSCORE_ALTERACAO: 15\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "forensic_score": 15,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "84e63be1cad3422582c5d577ed24a080",
+    "created_at": "2026-07-02 16:27:06",
+    "filename": "vanessa 02.jpeg",
+    "stored_filename": "84e63be1cad3422582c5d577ed24a080.jpeg",
+    "image_url": "/uploads/84e63be1cad3422582c5d577ed24a080.jpeg",
+    "model": "medgemma1.5:4b",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem parece ser uma foto real de dentes.\nTIPO: REAL\nSCORE_ALTERACAO: 15\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "forensic_score": 15,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "68be96aca1ad4a43936bf46199d9a8a0",
+    "created_at": "2026-07-02 16:27:06",
+    "filename": "eeffff65456bf8e742dd34884212830ecdac60655844b90f124981680e6812bf.jpeg",
+    "stored_filename": "68be96aca1ad4a43936bf46199d9a8a0.jpeg",
+    "image_url": "/uploads/68be96aca1ad4a43936bf46199d9a8a0.jpeg",
+    "model": "medgemma1.5:4b",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: Imagem de dentes naturais.\nTIPO: REAL\nSCORE_ALTERACAO: 15\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "forensic_score": 15,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "b243dfb3123447859887518de45afbe9",
+    "created_at": "2026-07-02 16:27:06",
+    "filename": "Pasted Graphic 2.jpg.jpeg",
+    "stored_filename": "b243dfb3123447859887518de45afbe9.jpeg",
+    "image_url": "/uploads/b243dfb3123447859887518de45afbe9.jpeg",
+    "model": "medgemma1.5:4b",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem parece ser uma foto real de um dente.\nTIPO: REAL\nSCORE_ALTERACAO: 15\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "forensic_score": 15,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "2da8788bfb1a4d668cfe2fb7532d2b81",
+    "created_at": "2026-07-02 16:27:06",
+    "filename": "vanessa c.jpeg",
+    "stored_filename": "2da8788bfb1a4d668cfe2fb7532d2b81.jpeg",
+    "image_url": "/uploads/2da8788bfb1a4d668cfe2fb7532d2b81.jpeg",
+    "model": "medgemma1.5:4b",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: Imagem de dentes naturais.\nTIPO: REAL\nSCORE_ALTERACAO: 15\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "forensic_score": 15,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  },
+  {
+    "id": "04727d82f2874c5c81a2e81892a42c65",
+    "created_at": "2026-07-02 16:27:06",
+    "filename": "whatsapp image 2026-06-10 at 13.09.12.jpeg",
+    "stored_filename": "04727d82f2874c5c81a2e81892a42c65.jpeg",
+    "image_url": "/uploads/04727d82f2874c5c81a2e81892a42c65.jpeg",
+    "model": "medgemma1.5:4b",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: Imagem de dentes naturais.\nTIPO: REAL\nSCORE_ALTERACAO: 15\nEVIDENCIAS: sem evidencias adicionais informadas",
+    "forensic_score": 15,
+    "source": "historico_normalizado",
+    "forensic_evidence": [
+      "sem evidencias adicionais informadas"
+    ]
+  }
+]
