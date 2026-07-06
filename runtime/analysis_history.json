@@ -1,5 +1,78 @@
 [
   {
+    "id": "4f247f973eac46abad3d08f8c12934e9",
+    "created_at": "2026-07-06 09:38:49",
+    "filename": "image1.png",
+    "stored_filename": "4f247f973eac46abad3d08f8c12934e9.png",
+    "image_url": "/uploads/4f247f973eac46abad3d08f8c12934e9.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 37\nEVIDENCIAS: nitidez inconsistente entre regioes; LLM: sem evidencias adicionais informadas",
+    "duration_seconds": "119.54",
+    "source": "hibrido_local_llm",
+    "forensic_score": 26,
+    "forensic_evidence": [
+      "nitidez inconsistente entre regioes"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.652,
+      "ela_p95": 5.0,
+      "ela_block_cv": 0.342,
+      "laplacian_var": 421.392,
+      "sharpness_block_cv": 1.19,
+      "noise_mean": 2.545,
+      "noise_block_cv": 0.565,
+      "saturated_overlay_ratio": 0.0,
+      "marker_overlay_ratio": 0.0,
+      "green_marker_ratio": 0.0,
+      "dhash": "e391519bd694f8d1",
+      "nearest_calibration_distance": 29
+    }
+  },
+  {
+    "id": "2796b9dc11af4752a2e4772645119680",
+    "created_at": "2026-07-06 09:36:43",
+    "filename": "whatsapp image 2026-06-10 at 13.09.12.jpeg",
+    "stored_filename": "2796b9dc11af4752a2e4772645119680.jpeg",
+    "image_url": "/uploads/2796b9dc11af4752a2e4772645119680.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem parece ser a foto original, com anatomia e textura naturais.\nTIPO: REAL\nSCORE_ALTERACAO: 8\nEVIDENCIAS: irregularidades naturais de esmalte; manchas e desgaste coerentes; reflexos e anatomia compatíveis",
+    "duration_seconds": "0.19",
+    "source": "calibracao_sha256",
+    "forensic_score": 8,
+    "forensic_evidence": [
+      "irregularidades naturais de esmalte; manchas e desgaste coerentes; reflexos e anatomia compatíveis"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "e6f7eb08f53b46fead47b7d19b410321",
+    "created_at": "2026-07-06 09:36:27",
+    "filename": "Pasted Graphic 2.jpg.jpeg",
+    "stored_filename": "e6f7eb08f53b46fead47b7d19b410321.jpeg",
+    "image_url": "/uploads/e6f7eb08f53b46fead47b7d19b410321.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "IA_GERADA_EDITADA",
+    "report": "VEREDITO: IA_GERADA_EDITADA\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem apresenta sinais compatíveis com edição/geração por IA nos dentes posteriores.\nTIPO: IA\nSCORE_ALTERACAO: 92\nEVIDENCIAS: dentes posteriores excessivamente lisos e reconstituídos; anatomia oclusal artificial; textura dental mais uniforme que a foto original",
+    "duration_seconds": "0.31",
+    "source": "calibracao_sha256",
+    "forensic_score": 92,
+    "forensic_evidence": [
+      "dentes posteriores excessivamente lisos e reconstituídos; anatomia oclusal artificial; textura dental mais uniforme que a foto original"
+    ],
+    "forensic_metrics": {}
+  },
+  {
     "id": "1129721a0cc94af29fdeda1d5e1a8c8a",
     "created_at": "2026-07-06 09:22:02",
     "filename": "vanessa c.jpeg",
