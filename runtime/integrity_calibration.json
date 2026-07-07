@@ -1,11 +1,46 @@
 {
+  "4643650CBA266DDF7DE3CC35C156273253338049FC2154E96264807146DD590C": {
+    "label": "IA_GERADA_EDITADA",
+    "confidence": "alta",
+    "score": 92,
+    "type": "IA",
+    "evidence": "rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "justification": "A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.",
+    "features": {
+      "ela_mean": 0.08775,
+      "ela_p95": 0.09375,
+      "ela_block_cv": 0.10124999999999999,
+      "laplacian_log": 0.617277786865039,
+      "sharpness_block_cv": 0.48444444444444446,
+      "noise_mean": 0.163375,
+      "noise_block_cv": 0.244375,
+      "saturated_overlay": 0.0,
+      "marker_overlay": 0.0,
+      "green_marker": 0.0
+    },
+    "stored_filename": "626bf21b49a543b2ab542428df43d0dd.jpg",
+    "learned_at": "2026-07-06 11:52:51"
+  },
   "126D3A85B9A3B71F8923E034475A7DBBD56DEDDF20FD08346EA1AB03C97E2CFC": {
     "label": "IA_GERADA_EDITADA",
     "confidence": "alta",
     "score": 92,
     "type": "IA",
     "evidence": "dentes posteriores excessivamente lisos e reconstituídos; anatomia oclusal artificial; textura dental mais uniforme que a foto original",
-    "justification": "A imagem apresenta sinais compatíveis com edição/geração por IA nos dentes posteriores."
+    "justification": "A imagem apresenta sinais compatíveis com edição/geração por IA nos dentes posteriores.",
+    "features": {
+      "ela_mean": 0.15541666666666668,
+      "ela_p95": 0.15625,
+      "ela_block_cv": 0.200625,
+      "laplacian_log": 0.7678030534323653,
+      "sharpness_block_cv": 0.4611111111111111,
+      "noise_mean": 0.38375,
+      "noise_block_cv": 0.286875,
+      "saturated_overlay": 0.0945,
+      "marker_overlay": 0.1215,
+      "green_marker": 0.0
+    },
+    "stored_filename": "0257098ed2c24fd2a6053ab0f1752085.jpeg"
   },
   "710A4072DA92EC91BB55EEED92F8E18BE576E88719826562F1B2A1C48272CF06": {
     "label": "REAL",
@@ -13,6 +48,125 @@
     "score": 8,
     "type": "REAL",
     "evidence": "irregularidades naturais de esmalte; manchas e desgaste coerentes; reflexos e anatomia compatíveis",
-    "justification": "A imagem parece ser a foto original, com anatomia e textura naturais."
+    "justification": "A imagem parece ser a foto original, com anatomia e textura naturais.",
+    "features": {
+      "ela_mean": 0.14816666666666667,
+      "ela_p95": 0.125,
+      "ela_block_cv": 0.1225,
+      "laplacian_log": 0.7451308219858062,
+      "sharpness_block_cv": 0.42333333333333334,
+      "noise_mean": 0.41325,
+      "noise_block_cv": 0.3,
+      "saturated_overlay": 0.091,
+      "marker_overlay": 0.11699999999999999,
+      "green_marker": 0.0
+    },
+    "stored_filename": "04727d82f2874c5c81a2e81892a42c65.jpeg"
+  },
+  "219EA47CD21F13EABD5F8080CA03D3658201191522C457830F8783A94BD2AA80": {
+    "label": "MODIFICADO",
+    "confidence": "alta",
+    "score": 90,
+    "type": "MODIFICADO",
+    "evidence": "rotulo informado pelo usuario como imagem modificada/falsa",
+    "justification": "A imagem foi marcada manualmente pelo usuario como exemplo modificado.",
+    "features": {
+      "ela_mean": 0.13766666666666666,
+      "ela_p95": 0.15625,
+      "ela_block_cv": 0.21375,
+      "laplacian_log": 0.755741724102345,
+      "sharpness_block_cv": 0.6611111111111111,
+      "noise_mean": 0.318125,
+      "noise_block_cv": 0.35312499999999997,
+      "saturated_overlay": 0.0,
+      "marker_overlay": 0.0,
+      "green_marker": 0.0
+    },
+    "stored_filename": "3e94e6849c114c0b8e0fbf0d043036f4.png"
+  },
+  "6CAA746E16AD8478DCC3B44EF4ABC0774CE456F2D688775389C37AEC6AFA741C": {
+    "label": "MODIFICADO",
+    "confidence": "alta",
+    "score": 90,
+    "type": "MODIFICADO",
+    "evidence": "perfil visual informado pelo usuario como imagem modificada/falsa; padrao comparativo salvo contra imagem original",
+    "justification": "A imagem foi marcada pelo usuario como modificada em comparacao com a original enviada.",
+    "features": {
+      "ela_mean": 0.17333333333333334,
+      "ela_p95": 0.1875,
+      "ela_block_cv": 0.22124999999999997,
+      "laplacian_log": 0.8452233582817414,
+      "sharpness_block_cv": 0.6144444444444445,
+      "noise_mean": 0.46575,
+      "noise_block_cv": 0.538125,
+      "saturated_overlay": 0.007,
+      "marker_overlay": 0.009000000000000001,
+      "green_marker": 0.0
+    },
+    "stored_filename": "71593df2de35476bbcb74895141c1b65.png",
+    "learned_at": "2026-07-06 10:12:35",
+    "original_sha256": "57F8E1D05BCB25156A8AA038422F752B84551A8FF78E379193F22DD88D52FCC6",
+    "original_stored_filename": "4d315bf9e6a1411384e1730233f7c726.jpeg",
+    "comparison": {
+      "dhash_distance": 5,
+      "mean_diff": 13.829,
+      "central_mean_diff": 16.054,
+      "high_diff_ratio": 0.11075,
+      "central_high_diff_ratio": 0.14158,
+      "same_scene": true
+    },
+    "comparison_features": {
+      "same_scene": 1.0,
+      "dhash_distance": 0.078125,
+      "mean_diff": 0.1728625,
+      "central_mean_diff": 0.200675,
+      "high_diff_ratio": 0.11075,
+      "central_high_diff_ratio": 0.14158
+    }
+  },
+  "57F8E1D05BCB25156A8AA038422F752B84551A8FF78E379193F22DD88D52FCC6": {
+    "label": "REAL",
+    "confidence": "alta",
+    "score": 8,
+    "type": "REAL",
+    "evidence": "imagem original associada a par comparativo marcado pelo usuario",
+    "justification": "A imagem foi marcada como original de referencia para aprendizado local comparativo.",
+    "features": {
+      "ela_mean": 0.155,
+      "ela_p95": 0.15625,
+      "ela_block_cv": 0.1475,
+      "laplacian_log": 0.8035337551269812,
+      "sharpness_block_cv": 0.6361111111111111,
+      "noise_mean": 0.45875,
+      "noise_block_cv": 0.543125,
+      "saturated_overlay": 0.028,
+      "marker_overlay": 0.036000000000000004,
+      "green_marker": 0.0
+    },
+    "stored_filename": "4d315bf9e6a1411384e1730233f7c726.jpeg",
+    "learned_at": "2026-07-06 10:12:35",
+    "paired_modified_sha256": "6CAA746E16AD8478DCC3B44EF4ABC0774CE456F2D688775389C37AEC6AFA741C"
+  },
+  "40F0D8396E451C4E8CC89EC2D8607B6444985644D6DC4B1EB7BE0D6FA8B7CD49": {
+    "label": "REAL",
+    "confidence": "alta",
+    "score": 8,
+    "type": "REAL",
+    "evidence": "perfil visual informado pelo usuario como imagem real/original",
+    "justification": "A imagem foi marcada pelo usuario como exemplo real para aprendizado local de padrao.",
+    "features": {
+      "ela_mean": 0.10333333333333333,
+      "ela_p95": 0.09375,
+      "ela_block_cv": 0.164375,
+      "laplacian_log": 0.631945505542457,
+      "sharpness_block_cv": 0.5666666666666667,
+      "noise_mean": 0.221625,
+      "noise_block_cv": 0.344375,
+      "saturated_overlay": 0.007,
+      "marker_overlay": 0.009000000000000001,
+      "green_marker": 0.0
+    },
+    "stored_filename": "d854dc95450c4036916bbe8090488e52.jpg",
+    "learned_at": "2026-07-06 11:02:14"
   }
 }

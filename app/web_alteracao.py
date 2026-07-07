@@ -21,6 +21,9 @@ try:
         ForensicResult,
         analyze_forensics,
         build_calibration_samples,
+        compare_with_original,
+        comparison_feature_profile,
+        feature_profile,
         file_sha256 as forensic_sha256,
     )
 except ModuleNotFoundError:  # pragma: no cover - supports python -m app.web_alteracao
@@ -28,6 +31,9 @@ except ModuleNotFoundError:  # pragma: no cover - supports python -m app.web_alt
         ForensicResult,
         analyze_forensics,
         build_calibration_samples,
+        compare_with_original,
+        comparison_feature_profile,
+        feature_profile,
         file_sha256 as forensic_sha256,
     )
 
@@ -159,6 +165,24 @@ HTML = """<!doctype html>
       color: #fff;
       font-weight: 700;
       cursor: pointer;
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .feedback-button {
+      background: #475569;
+    }
+    .feedback-button.modified {
+      background: #b42318;
+    }
+    .feedback-button.ai {
+      background: #7c3aed;
+    }
+    .feedback-button.real {
+      background: #067647;
     }
     button:disabled {
       cursor: wait;
@@ -292,6 +316,43 @@ HTML = """<!doctype html>
       font-size: 18px;
       letter-spacing: 0;
     }
+    .history-tabs {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .history-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fff;
+      color: #334155;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .history-tab.active {
+      border-color: #1264a3;
+      background: #e8f2fb;
+      color: #0f4f82;
+    }
+    .history-tab-count {
+      min-width: 22px;
+      border-radius: 999px;
+      padding: 2px 7px;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 12px;
+      text-align: center;
+    }
+    .history-tab.active .history-tab-count {
+      background: #1264a3;
+      color: #fff;
+    }
     .history-list {
       display: grid;
       gap: 12px;
@@ -364,6 +425,13 @@ HTML = """<!doctype html>
       .forensics {
         grid-template-columns: 1fr;
       }
+      .history-tabs {
+        align-items: stretch;
+      }
+      .history-tab {
+        flex: 1 1 calc(50% - 8px);
+        justify-content: center;
+      }
     }
   </style>
 </head>
@@ -393,7 +461,12 @@ HTML = """<!doctype html>
           <img id="preview" class="preview" alt="Previa da imagem suspeita">
           <img id="originalPreview" class="preview" alt="Previa da imagem original">
         </div>
-        <button id="submit" type="submit">Analisar imagem</button>
+        <div class="actions">
+          <button id="submit" type="submit">Analisar imagem</button>
+          <button id="markReal" class="feedback-button real" type="button">Real</button>
+          <button id="markModified" class="feedback-button modified" type="button">Modificada</button>
+          <button id="markAi" class="feedback-button ai" type="button">IA</button>
+        </div>
         <div id="thinking" class="thinking" aria-live="polite">
           <div class="thinking-head">
             <span id="phase">Aguardando envio</span>
@@ -425,6 +498,13 @@ HTML = """<!doctype html>
         <h2>Historico de analises</h2>
         <p id="historyCount">0 registros</p>
       </div>
+      <div class="history-tabs" id="historyTabs" role="tablist" aria-label="Filtros do historico">
+        <button class="history-tab active" type="button" data-tab="all">Todos <span class="history-tab-count">0</span></button>
+        <button class="history-tab" type="button" data-tab="modified">Modificados/IA <span class="history-tab-count">0</span></button>
+        <button class="history-tab" type="button" data-tab="real">Reais <span class="history-tab-count">0</span></button>
+        <button class="history-tab" type="button" data-tab="inconclusive">Inconclusivos <span class="history-tab-count">0</span></button>
+        <button class="history-tab" type="button" data-tab="calibration">Calibracao <span class="history-tab-count">0</span></button>
+      </div>
       <div id="historyList" class="history-list">
         <div class="history-empty">Nenhuma analise armazenada ainda.</div>
       </div>
@@ -438,6 +518,9 @@ HTML = """<!doctype html>
     const preview = document.getElementById('preview');
     const originalPreview = document.getElementById('originalPreview');
     const submit = document.getElementById('submit');
+    const markReal = document.getElementById('markReal');
+    const markModified = document.getElementById('markModified');
+    const markAi = document.getElementById('markAi');
     const statusBox = document.getElementById('status');
     const thinking = document.getElementById('thinking');
     const phase = document.getElementById('phase');
@@ -455,12 +538,15 @@ HTML = """<!doctype html>
     const forensicScore = document.getElementById('forensicScore');
     const forensicSource = document.getElementById('forensicSource');
     const forensicEvidence = document.getElementById('forensicEvidence');
+    const historyTabs = document.getElementById('historyTabs');
     const historyList = document.getElementById('historyList');
     const historyCount = document.getElementById('historyCount');
     let progressTimer = null;
     let progressValue = 0;
     let estimatedSeconds = 75;
     let progressStartedAt = 0;
+    let historyItems = [];
+    let activeHistoryTab = 'all';
 
     function setProgress(value, label) {
       progressValue = Math.max(progressValue, Math.min(value, 100));
@@ -536,15 +622,68 @@ HTML = """<!doctype html>
       return 'indeterminado';
     }
 
+    function isModifiedHistory(item) {
+      const verdict = String(item.verdict || '').toUpperCase();
+      return verdict.includes('MODIFICADO') || verdict.includes('ALTERADA') || verdict.includes('IA');
+    }
+
+    function isCalibrationHistory(item) {
+      const source = String(item.source || '').toLowerCase();
+      const model = String(item.model || '').toLowerCase();
+      return source.includes('calibracao') || source.includes('feedback') || model.includes('calibracao');
+    }
+
+    function historyTabCounts(items) {
+      return {
+        all: items.length,
+        modified: items.filter(isModifiedHistory).length,
+        real: items.filter((item) => String(item.verdict || '').toUpperCase() === 'REAL').length,
+        inconclusive: items.filter((item) => String(item.verdict || '').toUpperCase() === 'INDETERMINADO').length,
+        calibration: items.filter(isCalibrationHistory).length
+      };
+    }
+
+    function filteredHistory(items) {
+      if (activeHistoryTab === 'modified') return items.filter(isModifiedHistory);
+      if (activeHistoryTab === 'real') return items.filter((item) => String(item.verdict || '').toUpperCase() === 'REAL');
+      if (activeHistoryTab === 'inconclusive') return items.filter((item) => String(item.verdict || '').toUpperCase() === 'INDETERMINADO');
+      if (activeHistoryTab === 'calibration') return items.filter(isCalibrationHistory);
+      return items;
+    }
+
+    function updateHistoryTabs(items) {
+      const counts = historyTabCounts(items);
+      historyTabs.querySelectorAll('.history-tab').forEach((tab) => {
+        const tabName = tab.dataset.tab;
+        tab.classList.toggle('active', tabName === activeHistoryTab);
+        const counter = tab.querySelector('.history-tab-count');
+        if (counter) counter.textContent = counts[tabName] || 0;
+      });
+    }
+
+    function emptyHistoryMessage() {
+      const labels = {
+        all: 'Nenhuma analise armazenada ainda.',
+        modified: 'Nenhuma analise modificada ou IA nesta aba.',
+        real: 'Nenhuma analise real nesta aba.',
+        inconclusive: 'Nenhuma analise inconclusiva nesta aba.',
+        calibration: 'Nenhuma calibracao salva nesta aba.'
+      };
+      return labels[activeHistoryTab] || labels.all;
+    }
+
     function renderHistory(items) {
-      historyCount.textContent = `${items.length} registro${items.length === 1 ? '' : 's'}`;
-      if (!items.length) {
-        historyList.innerHTML = '<div class="history-empty">Nenhuma analise armazenada ainda.</div>';
+      historyItems = items;
+      updateHistoryTabs(items);
+      const visibleItems = filteredHistory(items);
+      historyCount.textContent = `${visibleItems.length} de ${items.length} registro${items.length === 1 ? '' : 's'}`;
+      if (!visibleItems.length) {
+        historyList.innerHTML = `<div class="history-empty">${emptyHistoryMessage()}</div>`;
         return;
       }
 
       historyList.innerHTML = '';
-      for (const item of items) {
+      for (const item of visibleItems) {
         const card = document.createElement('article');
         card.className = 'history-item';
 
@@ -587,6 +726,68 @@ HTML = """<!doctype html>
         body.append(meta, itemVerdict, itemReport);
         card.append(imageBox, body);
         historyList.appendChild(card);
+      }
+    }
+
+    historyTabs.addEventListener('click', (event) => {
+      const tab = event.target.closest('.history-tab');
+      if (!tab) return;
+      activeHistoryTab = tab.dataset.tab || 'all';
+      renderHistory(historyItems);
+    });
+
+    async function calibrateImage(label) {
+      const file = input.files[0];
+      if (!file) {
+        statusBox.textContent = 'Selecione uma imagem antes de marcar como exemplo.';
+        return;
+      }
+
+      submit.disabled = true;
+      markReal.disabled = true;
+      markModified.disabled = true;
+      markAi.disabled = true;
+      result.style.display = 'none';
+      forensics.style.display = 'none';
+      resetThinking();
+      const statusByLabel = {
+        REAL: 'Salvando exemplo local como real...',
+        MODIFICADO: 'Salvando exemplo local como modificado...',
+        IA_GERADA_EDITADA: 'Salvando exemplo local como IA/editada...'
+      };
+      statusBox.textContent = statusByLabel[label] || 'Salvando exemplo local...';
+
+      const data = new FormData();
+      data.append('image', file);
+      data.append('label', label);
+      if (originalInput.files[0]) {
+        data.append('original_image', originalInput.files[0]);
+      }
+
+      try {
+        const response = await fetch('/calibrate', { method: 'POST', body: data });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Falha ao salvar exemplo.');
+
+        verdict.textContent = `Veredito: ${payload.verdict}`;
+        verdict.className = `verdict ${verdictClass(payload.verdict)}`;
+        report.textContent = payload.report;
+        forensicScore.textContent = payload.forensic_score !== undefined ? `${payload.forensic_score}%` : '-';
+        forensicSource.textContent = payload.source || '-';
+        forensicEvidence.textContent = (payload.forensic_evidence || []).join('; ') || '-';
+        forensics.style.display = 'grid';
+        result.style.display = 'block';
+        statusBox.textContent = originalInput.files[0]
+          ? 'Par salvo. O projeto local vai usar o padrao de diferenca entre suspeita e original nas proximas analises.'
+          : 'Exemplo salvo. O projeto local vai usar esse perfil visual para reconhecer padroes parecidos nas proximas analises.';
+        await loadHistory();
+      } catch (error) {
+        statusBox.textContent = error.message;
+      } finally {
+        submit.disabled = false;
+        markReal.disabled = false;
+        markModified.disabled = false;
+        markAi.disabled = false;
       }
     }
 
@@ -640,12 +841,19 @@ HTML = """<!doctype html>
       originalPreview.style.display = 'block';
     });
 
+    markReal.addEventListener('click', () => calibrateImage('REAL'));
+    markModified.addEventListener('click', () => calibrateImage('MODIFICADO'));
+    markAi.addEventListener('click', () => calibrateImage('IA_GERADA_EDITADA'));
+
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const file = input.files[0];
       if (!file) return;
 
       submit.disabled = true;
+      markReal.disabled = true;
+      markModified.disabled = true;
+      markAi.disabled = true;
       statusBox.textContent = useLlmInput.checked
         ? 'Analisando com pericia local e LLM local...'
         : 'Analisando em modo rapido local...';
@@ -686,6 +894,9 @@ HTML = """<!doctype html>
         statusBox.textContent = error.message;
       } finally {
         submit.disabled = false;
+        markReal.disabled = false;
+        markModified.disabled = false;
+        markAi.disabled = false;
       }
     });
 
@@ -967,6 +1178,13 @@ def load_calibration() -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def save_calibration(calibration: dict[str, Any]) -> None:
+    CALIBRATION_FILE.write_text(
+        json.dumps(calibration, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def load_calibration_samples():
     return build_calibration_samples(
         load_calibration(),
@@ -1027,6 +1245,61 @@ def append_history(entry: dict[str, Any]) -> None:
     history = load_history()
     history.insert(0, entry)
     save_history(history)
+
+
+def calibration_entry_for_label(label: str) -> dict[str, Any]:
+    normalized = canonical_integrity_label(label)
+    if normalized == "REAL":
+        return {
+            "label": "REAL",
+            "confidence": "alta",
+            "score": 8,
+            "type": "REAL",
+            "evidence": "perfil visual informado pelo usuario como imagem real/original",
+            "justification": "A imagem foi marcada pelo usuario como exemplo real para aprendizado local de padrao.",
+        }
+    if normalized == "IA_GERADA_EDITADA":
+        return {
+            "label": "IA_GERADA_EDITADA",
+            "confidence": "alta",
+            "score": 92,
+            "type": "IA",
+            "evidence": "rotulo informado pelo usuario como imagem alterada/gerada por IA",
+            "justification": "A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.",
+        }
+    return {
+        "label": "MODIFICADO",
+        "confidence": "alta",
+        "score": 90,
+        "type": "MODIFICADO",
+        "evidence": "perfil visual informado pelo usuario como imagem modificada/falsa",
+        "justification": "A imagem foi marcada pelo usuario como exemplo modificado para aprendizado local de padrao.",
+    }
+
+
+def calibrated_feedback_result(label: str) -> dict[str, Any]:
+    entry = calibration_entry_for_label(label)
+    report = "\n".join(
+        [
+            f"VEREDITO: {entry['label']}",
+            f"CONFIANCA: {entry['confidence']}",
+            f"JUSTIFICATIVA: {entry['justification']}",
+            f"TIPO: {entry['type']}",
+            f"SCORE_ALTERACAO: {entry['score']}",
+            f"EVIDENCIAS: {entry['evidence']}",
+        ]
+    )
+    normalized = normalize_report(report)
+    return {
+        "verdict": normalized["verdict"],
+        "report": normalized["report"],
+        "duration_seconds": "0.01",
+        "source": "feedback_usuario",
+        "forensic_score": entry["score"],
+        "forensic_evidence": [entry["evidence"]],
+        "forensic_metrics": {},
+        "calibration_entry": entry,
+    }
 
 
 def prepare_analysis_image(image_path: Path) -> Path:
@@ -1205,7 +1478,7 @@ class PeritoHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self) -> None:
-        if self.path != "/analyze":
+        if self.path not in {"/analyze", "/calibrate"}:
             self.send_error(HTTPStatus.NOT_FOUND, "Endpoint nao encontrado")
             return
 
@@ -1241,6 +1514,98 @@ class PeritoHandler(BaseHTTPRequestHandler):
             except ValueError as exc:
                 json_response(self, HTTPStatus.BAD_REQUEST, {"error": f"Imagem original: {exc}"})
                 return
+
+        if self.path == "/calibrate":
+            label_field = form["label"] if "label" in form else None
+            label = str(getattr(label_field, "value", "MODIFICADO")).upper()
+            label = canonical_integrity_label(label)
+            if label not in {"REAL", "MODIFICADO", "IA_GERADA_EDITADA"}:
+                json_response(
+                    self,
+                    HTTPStatus.BAD_REQUEST,
+                    {"error": "Rotulo invalido. Use REAL, MODIFICADO ou IA_GERADA_EDITADA."},
+                )
+                return
+
+            result = calibrated_feedback_result(label)
+            calibration = load_calibration()
+            calibration_entry = dict(result["calibration_entry"])
+            calibration_entry["features"] = feature_profile(image_path)
+            calibration_entry["stored_filename"] = image_path.name
+            calibration_entry["learned_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            forensic_metrics: dict[str, Any] = {}
+            if original_path is not None:
+                comparison = compare_with_original(image_path, original_path)
+                comparison_features = comparison_feature_profile(comparison)
+                forensic_metrics["comparison"] = comparison
+                calibration_entry["original_sha256"] = file_sha256(original_path)
+                calibration_entry["original_stored_filename"] = original_path.name
+                calibration_entry["comparison"] = comparison
+                calibration_entry["comparison_features"] = comparison_features
+                calibration_entry["evidence"] = (
+                    f"{calibration_entry['evidence']}; padrao comparativo salvo contra imagem original"
+                )
+                if label in {"MODIFICADO", "IA_GERADA_EDITADA"}:
+                    if label == "IA_GERADA_EDITADA":
+                        calibration_entry["justification"] = (
+                            "A imagem foi marcada pelo usuario como edicao ou geracao por IA em comparacao com a original enviada."
+                        )
+                    else:
+                        calibration_entry["justification"] = (
+                            "A imagem foi marcada pelo usuario como modificada em comparacao com a original enviada."
+                        )
+                    original_entry = calibration_entry_for_label("REAL")
+                    original_entry["features"] = feature_profile(original_path)
+                    original_entry["stored_filename"] = original_path.name
+                    original_entry["learned_at"] = calibration_entry["learned_at"]
+                    original_entry["paired_modified_sha256"] = file_sha256(image_path)
+                    original_entry["evidence"] = "imagem original associada a par comparativo marcado pelo usuario"
+                    original_entry["justification"] = (
+                        "A imagem foi marcada como original de referencia para aprendizado local comparativo."
+                    )
+                    calibration[file_sha256(original_path)] = original_entry
+                result["source"] = "feedback_usuario_comparacao"
+                result["forensic_evidence"] = [calibration_entry["evidence"]]
+                result["forensic_metrics"] = forensic_metrics
+                refreshed_report = "\n".join(
+                    [
+                        f"VEREDITO: {calibration_entry['label']}",
+                        f"CONFIANCA: {calibration_entry['confidence']}",
+                        f"JUSTIFICATIVA: {calibration_entry['justification']}",
+                        f"TIPO: {calibration_entry['type']}",
+                        f"SCORE_ALTERACAO: {calibration_entry['score']}",
+                        f"EVIDENCIAS: {calibration_entry['evidence']}",
+                    ]
+                )
+                normalized = normalize_report(refreshed_report)
+                result["verdict"] = normalized["verdict"]
+                result["report"] = normalized["report"]
+            calibration[file_sha256(image_path)] = calibration_entry
+            save_calibration(calibration)
+
+            entry = {
+                "id": image_path.stem,
+                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "filename": Path(field.filename).name,
+                "stored_filename": image_path.name,
+                "image_url": f"/uploads/{image_path.name}",
+                "original_filename": Path(original_field.filename).name if original_path is not None else None,
+                "original_stored_filename": original_path.name if original_path is not None else None,
+                "original_image_url": f"/uploads/{original_path.name}" if original_path is not None else None,
+                "model": "calibracao_local",
+                "verdict": result["verdict"],
+                "report": result["report"],
+                "duration_seconds": result["duration_seconds"],
+                "source": result["source"],
+                "forensic_score": result["forensic_score"],
+                "forensic_evidence": result["forensic_evidence"],
+                "forensic_metrics": result.get("forensic_metrics", {}),
+            }
+            append_history(entry)
+            payload = {key: value for key, value in result.items() if key != "calibration_entry"}
+            json_response(self, HTTPStatus.OK, {**payload, "history_item": entry})
+            return
+
         use_llm = "use_llm" in form and str(getattr(form["use_llm"], "value", "")).lower() in {"1", "true", "sim", "on"}
 
         try:

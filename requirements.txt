@@ -2,3 +2,7 @@ ollama
 langgraph
 pillow
 numpy
+pandas
+opencv-python
+scikit-image
+openpyxl

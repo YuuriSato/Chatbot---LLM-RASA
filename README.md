@@ -81,6 +81,34 @@ ollama create codex-dental -f .\models\Modelfile-Codex-Dental
 .\.venv\Scripts\python.exe .\app\perito_flow.py .\tests\test_dental.png --json
 ```
 
+## Comparacao de Raios-X por Paciente
+
+O script abaixo compara exames odontologicos de atendimentos diferentes e estima
+se parecem pertencer ao mesmo paciente. Ele nao emite diagnostico odontologico.
+
+Manifest CSV aceito:
+
+```csv
+image_path,patient_name,dentist,appointment_date,appointment_id
+.\runtime\uploads\exame_01.jpg,Paciente A,Dentista Y,2026-06-01,1
+.\runtime\uploads\exame_02.jpg,Paciente A,Dentista X,2026-07-01,2
+```
+
+Tambem sao aceitos cabecalhos em portugues como `caminho_arquivo`,
+`nome_paciente`, `dentista`, `data_atendimento` e `numero_atendimento`.
+
+Executar com manifest:
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\compare_dental_xrays.py --manifest .\data\xrays_manifest.csv --output .\reports\xray_patient_comparison.csv --excel .\reports\xray_patient_comparison.xlsx
+```
+
+Executar direto com uma pasta de imagens:
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\compare_dental_xrays.py --image-dir .\tests --output .\reports\xray_patient_comparison.csv
+```
+
 ## Dataset
 
 Estrutura esperada:

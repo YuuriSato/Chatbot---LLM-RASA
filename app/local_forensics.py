@@ -31,6 +31,8 @@ class CalibrationSample:
     evidence: str
     justification: str
     dhash: int
+    features: dict[str, float] = field(default_factory=dict)
+    comparison_features: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -213,18 +215,65 @@ def overlay_metrics(path: Path) -> dict[str, float]:
     max_channel = np.max(arr, axis=2)
     min_channel = np.min(arr, axis=2)
     saturation = max_channel - min_channel
-    red = (arr[:, :, 0] > 0.72) & (arr[:, :, 1] < 0.35) & (arr[:, :, 2] < 0.35)
+    red = (arr[:, :, 0] > 0.76) & (arr[:, :, 1] < 0.42) & (arr[:, :, 2] < 0.42) & (saturation > 0.34)
     green = (arr[:, :, 1] > 0.58) & (arr[:, :, 0] < 0.48) & (arr[:, :, 2] < 0.55) & (saturation > 0.28)
-    yellow = (arr[:, :, 0] > 0.70) & (arr[:, :, 1] > 0.65) & (arr[:, :, 2] < 0.40) & (saturation > 0.28)
     cyan_blue = (arr[:, :, 2] > 0.60) & (arr[:, :, 0] < 0.45) & (saturation > 0.32)
-    marker_overlay = red | green | yellow | cyan_blue
-    vivid_overlay = (max_channel > 0.70) & (saturation > 0.42)
-    strong_overlay = marker_overlay | vivid_overlay
+    marker_overlay = red | green | cyan_blue
+    strong_overlay = marker_overlay
     return {
         "saturated_overlay_ratio": round(float(np.mean(strong_overlay)), 5),
         "marker_overlay_ratio": round(float(np.mean(marker_overlay)), 5),
         "green_marker_ratio": round(float(np.mean(green)), 5),
     }
+
+
+def local_metrics(path: Path) -> dict[str, Any]:
+    metrics: dict[str, Any] = {}
+    metrics.update(ela_metrics(path))
+    metrics.update(sharpness_metrics(path))
+    metrics.update(noise_metrics(path))
+    metrics.update(overlay_metrics(path))
+    return metrics
+
+
+def feature_profile_from_metrics(metrics: dict[str, Any]) -> dict[str, float]:
+    return {
+        "ela_mean": min(float(metrics.get("ela_mean", 0)) / 12.0, 1.0),
+        "ela_p95": min(float(metrics.get("ela_p95", 0)) / 32.0, 1.0),
+        "ela_block_cv": min(float(metrics.get("ela_block_cv", 0)) / 1.6, 1.0),
+        "laplacian_log": min(math.log1p(float(metrics.get("laplacian_var", 0))) / 8.0, 1.0),
+        "sharpness_block_cv": min(float(metrics.get("sharpness_block_cv", 0)) / 1.8, 1.0),
+        "noise_mean": min(float(metrics.get("noise_mean", 0)) / 8.0, 1.0),
+        "noise_block_cv": min(float(metrics.get("noise_block_cv", 0)) / 1.6, 1.0),
+        "saturated_overlay": min(float(metrics.get("saturated_overlay_ratio", 0)) * 350.0, 1.0),
+        "marker_overlay": min(float(metrics.get("marker_overlay_ratio", 0)) * 450.0, 1.0),
+        "green_marker": min(float(metrics.get("green_marker_ratio", 0)) * 900.0, 1.0),
+    }
+
+
+def feature_profile(path: Path) -> dict[str, float]:
+    return feature_profile_from_metrics(local_metrics(path))
+
+
+def feature_distance(left: dict[str, float], right: dict[str, float]) -> float:
+    keys = sorted(set(left) | set(right))
+    if not keys:
+        return 1.0
+    weights = {
+        "saturated_overlay": 1.8,
+        "marker_overlay": 2.2,
+        "green_marker": 2.4,
+        "ela_block_cv": 1.2,
+        "sharpness_block_cv": 1.1,
+        "noise_block_cv": 1.1,
+    }
+    total_weight = 0.0
+    total = 0.0
+    for key in keys:
+        weight = weights.get(key, 1.0)
+        total += weight * abs(float(left.get(key, 0.0)) - float(right.get(key, 0.0)))
+        total_weight += weight
+    return total / max(total_weight, 1e-6)
 
 
 def compare_with_original(suspect_path: Path, original_path: Path) -> dict[str, float | int | bool]:
@@ -259,6 +308,36 @@ def compare_with_original(suspect_path: Path, original_path: Path) -> dict[str, 
     }
 
 
+def comparison_feature_profile(comparison: dict[str, Any]) -> dict[str, float]:
+    return {
+        "same_scene": 1.0 if comparison.get("same_scene") else 0.0,
+        "dhash_distance": min(float(comparison.get("dhash_distance", 64)) / 64.0, 1.0),
+        "mean_diff": min(float(comparison.get("mean_diff", 0)) / 80.0, 1.0),
+        "central_mean_diff": min(float(comparison.get("central_mean_diff", 0)) / 80.0, 1.0),
+        "high_diff_ratio": min(float(comparison.get("high_diff_ratio", 0)), 1.0),
+        "central_high_diff_ratio": min(float(comparison.get("central_high_diff_ratio", 0)), 1.0),
+    }
+
+
+def comparison_feature_distance(left: dict[str, float], right: dict[str, float]) -> float:
+    keys = sorted(set(left) | set(right))
+    if not keys:
+        return 1.0
+    weights = {
+        "same_scene": 2.2,
+        "central_mean_diff": 1.7,
+        "central_high_diff_ratio": 1.7,
+        "high_diff_ratio": 1.3,
+    }
+    total_weight = 0.0
+    total = 0.0
+    for key in keys:
+        weight = weights.get(key, 1.0)
+        total += weight * abs(float(left.get(key, 0.0)) - float(right.get(key, 0.0)))
+        total_weight += weight
+    return total / max(total_weight, 1e-6)
+
+
 def build_calibration_samples(
     calibration: dict[str, Any],
     search_dirs: list[Path],
@@ -281,6 +360,12 @@ def build_calibration_samples(
             if not isinstance(entry, dict):
                 continue
             try:
+                features = entry.get("features")
+                if not isinstance(features, dict):
+                    features = feature_profile(path)
+                comparison_features = entry.get("comparison_features")
+                if not isinstance(comparison_features, dict):
+                    comparison_features = {}
                 samples.append(
                     CalibrationSample(
                         path=path,
@@ -291,6 +376,10 @@ def build_calibration_samples(
                         evidence=str(entry.get("evidence", "")),
                         justification=str(entry.get("justification", "")),
                         dhash=dhash_image(path),
+                        features={str(key): float(value) for key, value in features.items()},
+                        comparison_features={
+                            str(key): float(value) for key, value in comparison_features.items()
+                        },
                     )
                 )
                 seen.add(sha)
@@ -399,6 +488,106 @@ def apply_original_comparison(score: int, evidence: list[str], metrics: dict[str
     return clamp(score), preferred
 
 
+def apply_pattern_learning(
+    score: int,
+    evidence: list[str],
+    preferred: str | None,
+    metrics: dict[str, Any],
+    samples: list[CalibrationSample],
+) -> tuple[int, str | None]:
+    comparison = metrics.get("comparison")
+    if isinstance(comparison, dict):
+        current_comparison = comparison_feature_profile(comparison)
+        metrics["comparison_feature_profile"] = current_comparison
+        best_pair: CalibrationSample | None = None
+        best_pair_distance = math.inf
+        for sample in samples:
+            if not sample.comparison_features:
+                continue
+            distance = comparison_feature_distance(current_comparison, sample.comparison_features)
+            if distance < best_pair_distance:
+                best_pair_distance = distance
+                best_pair = sample
+
+        if best_pair is not None:
+            metrics["nearest_pair_pattern"] = {
+                "label": best_pair.label,
+                "distance": round(float(best_pair_distance), 4),
+                "filename": best_pair.path.name,
+            }
+            if best_pair.label in {
+                "MODIFICADO",
+                "IA_GERADA_EDITADA",
+                "ALTERADA_MANUALMENTE",
+                "ALTERADA_DIGITALMENTE",
+            }:
+                if best_pair_distance <= 0.10:
+                    score = max(score, 88)
+                    preferred = "IA_GERADA_EDITADA" if best_pair.label == "IA_GERADA_EDITADA" else "MODIFICADO"
+                    evidence.append("padrao de diferenca com original parecido com par modificado salvo")
+                elif best_pair_distance <= 0.18:
+                    score = max(score, 74)
+                    preferred = preferred or "MODIFICADO"
+                    evidence.append("diferenca com original parcialmente parecida com exemplos modificados")
+
+    current_features = feature_profile_from_metrics(metrics)
+    metrics["feature_profile"] = current_features
+    best_sample: CalibrationSample | None = None
+    best_distance = math.inf
+    modified_labels = {"MODIFICADO", "IA_GERADA_EDITADA", "ALTERADA_MANUALMENTE", "ALTERADA_DIGITALMENTE"}
+    best_modified_sample: CalibrationSample | None = None
+    best_modified_distance = math.inf
+    best_real_sample: CalibrationSample | None = None
+    best_real_distance = math.inf
+    for sample in samples:
+        if not sample.features:
+            continue
+        distance = feature_distance(current_features, sample.features)
+        if distance < best_distance:
+            best_distance = distance
+            best_sample = sample
+        if sample.label in modified_labels and distance < best_modified_distance:
+            best_modified_distance = distance
+            best_modified_sample = sample
+        elif sample.label == "REAL" and distance < best_real_distance:
+            best_real_distance = distance
+            best_real_sample = sample
+
+    if best_sample is None:
+        return score, preferred
+
+    metrics["nearest_pattern"] = {
+        "label": best_sample.label,
+        "distance": round(float(best_distance), 4),
+        "filename": best_sample.path.name,
+    }
+
+    if best_real_sample is not None and best_real_distance <= 0.10 and score < 70:
+        real_is_clearly_closer = (
+            best_modified_sample is None or best_real_distance + 0.025 <= best_modified_distance
+        )
+        if real_is_clearly_closer:
+            score = min(score, 24)
+            preferred = "REAL"
+            evidence.append("padrao visual mais proximo de exemplo real salvo")
+            return clamp(score), preferred
+
+    if best_modified_sample is not None:
+        clearly_closer_than_real = (
+            best_real_sample is None or best_modified_distance + 0.025 < best_real_distance
+        )
+        if best_modified_distance <= 0.08 and clearly_closer_than_real:
+            score = max(score, 84)
+            preferred = "MODIFICADO" if best_modified_sample.label != "IA_GERADA_EDITADA" else "IA_GERADA_EDITADA"
+            evidence.append("padrao visual parecido com exemplo modificado salvo")
+        elif best_modified_distance <= 0.14 and clearly_closer_than_real:
+            score = max(score, 68)
+            preferred = preferred or "MODIFICADO"
+            evidence.append("padrao visual parcialmente parecido com exemplos modificados")
+
+    return clamp(score), preferred
+
+
 def analyze_forensics(
     image_path: Path,
     *,
@@ -422,23 +611,37 @@ def analyze_forensics(
             best_distance = distance
             best_sample = sample
 
-    if best_sample is not None and best_distance <= 6:
-        entry = {
-            "label": best_sample.label,
-            "score": best_sample.score,
-            "confidence": best_sample.confidence,
-            "evidence": f"similaridade perceptual com {best_sample.path.name}; distancia dHash {best_distance}",
-            "justification": best_sample.justification,
-        }
-        result = result_from_calibration(entry, "calibracao_perceptual", exact=False, perceptual=True)
-        result.metrics["perceptual_distance"] = int(best_distance)
-        return result
+    precomputed_metrics: dict[str, Any] | None = None
+    if best_sample is not None and best_distance <= 2:
+        if best_sample.label == "REAL":
+            precomputed_metrics = local_metrics(image_path)
+            quick_score, _quick_evidence, quick_preferred = score_single_image(precomputed_metrics)
+            if quick_preferred == "MODIFICADO" or quick_score >= 60:
+                best_sample = best_sample
+            else:
+                entry = {
+                    "label": best_sample.label,
+                    "score": best_sample.score,
+                    "confidence": best_sample.confidence,
+                    "evidence": f"similaridade perceptual com {best_sample.path.name}; distancia dHash {best_distance}",
+                    "justification": best_sample.justification,
+                }
+                result = result_from_calibration(entry, "calibracao_perceptual", exact=False, perceptual=True)
+                result.metrics["perceptual_distance"] = int(best_distance)
+                return result
+        else:
+            entry = {
+                "label": best_sample.label,
+                "score": best_sample.score,
+                "confidence": best_sample.confidence,
+                "evidence": f"similaridade perceptual com {best_sample.path.name}; distancia dHash {best_distance}",
+                "justification": best_sample.justification,
+            }
+            result = result_from_calibration(entry, "calibracao_perceptual", exact=False, perceptual=True)
+            result.metrics["perceptual_distance"] = int(best_distance)
+            return result
 
-    metrics: dict[str, Any] = {}
-    metrics.update(ela_metrics(image_path))
-    metrics.update(sharpness_metrics(image_path))
-    metrics.update(noise_metrics(image_path))
-    metrics.update(overlay_metrics(image_path))
+    metrics = precomputed_metrics or local_metrics(image_path)
     metrics["dhash"] = f"{image_dhash:016x}"
     if best_sample is not None:
         metrics["nearest_calibration_distance"] = int(best_distance)
@@ -452,11 +655,19 @@ def analyze_forensics(
         preferred = comparison_preferred or preferred
         source = "forense_local_comparacao"
 
+    score, pattern_preferred = apply_pattern_learning(score, evidence, preferred, metrics, calibration_samples)
+    preferred = pattern_preferred or preferred
+
     if best_sample is not None and best_distance <= 14:
         if best_sample.label == "IA_GERADA_EDITADA":
             score = max(score, 72)
             preferred = "IA_GERADA_EDITADA"
-        elif best_sample.label == "REAL":
+        elif (
+            best_sample.label == "REAL"
+            and preferred
+            not in {"MODIFICADO", "IA_GERADA_EDITADA", "ALTERADA_MANUALMENTE", "ALTERADA_DIGITALMENTE"}
+            and score < 70
+        ):
             score = min(score, 28)
             preferred = "REAL"
         evidence.append(f"proximo de exemplo calibrado: {best_sample.path.name}")

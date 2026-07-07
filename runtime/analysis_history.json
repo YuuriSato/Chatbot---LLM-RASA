@@ -1,5 +1,877 @@
 [
   {
+    "id": "11addfc43df74a80bb3e5898a4fa474d",
+    "created_at": "2026-07-06 23:43:04",
+    "filename": "3985ae4c-de88-4670-af19-8ca443bdfec7.png",
+    "stored_filename": "11addfc43df74a80bb3e5898a4fa474d.png",
+    "image_url": "/uploads/11addfc43df74a80bb3e5898a4fa474d.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 69\nEVIDENCIAS: nitidez inconsistente entre regioes; marcacao colorida sobreposta detectada; proximo de exemplo calibrado: 25e852c9f5c9447198707d2c09bb705e.jpg; LLM: sem evidencias adicionais informadas",
+    "duration_seconds": "141.25",
+    "source": "hibrido_local_llm",
+    "forensic_score": 84,
+    "forensic_evidence": [
+      "nitidez inconsistente entre regioes",
+      "marcacao colorida sobreposta detectada",
+      "proximo de exemplo calibrado: 25e852c9f5c9447198707d2c09bb705e.jpg"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.488,
+      "ela_p95": 4.0,
+      "ela_block_cv": 0.238,
+      "laplacian_var": 207.42,
+      "sharpness_block_cv": 1.267,
+      "noise_mean": 1.576,
+      "noise_block_cv": 0.607,
+      "saturated_overlay_ratio": 0.02217,
+      "marker_overlay_ratio": 0.02217,
+      "green_marker_ratio": 0.0,
+      "dhash": "df99bc7c7c70bc9d",
+      "nearest_calibration_distance": 12,
+      "feature_profile": {
+        "ela_mean": 0.124,
+        "ela_p95": 0.125,
+        "ela_block_cv": 0.14875,
+        "laplacian_log": 0.6674444093205352,
+        "sharpness_block_cv": 0.7038888888888888,
+        "noise_mean": 0.197,
+        "noise_block_cv": 0.37937499999999996,
+        "saturated_overlay": 1.0,
+        "marker_overlay": 1.0,
+        "green_marker": 0.0
+      },
+      "nearest_pattern": {
+        "label": "REAL",
+        "distance": 0.3107,
+        "filename": "c584042d48584fcf928df5a58d23ea07.jpg"
+      }
+    }
+  },
+  {
+    "id": "76d9fac853a14e62b584453e5534e92b",
+    "created_at": "2026-07-06 17:11:14",
+    "filename": "whatsapp image 2026-06-10 at 13.09.12.jpeg",
+    "stored_filename": "76d9fac853a14e62b584453e5534e92b.jpeg",
+    "image_url": "/uploads/76d9fac853a14e62b584453e5534e92b.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem parece ser a foto original, com anatomia e textura naturais.\nTIPO: REAL\nSCORE_ALTERACAO: 8\nEVIDENCIAS: irregularidades naturais de esmalte; manchas e desgaste coerentes; reflexos e anatomia compatíveis",
+    "duration_seconds": "0.81",
+    "source": "calibracao_sha256",
+    "forensic_score": 8,
+    "forensic_evidence": [
+      "irregularidades naturais de esmalte; manchas e desgaste coerentes; reflexos e anatomia compatíveis"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "c86cc7429a8346599d9c5b55806dc87a",
+    "created_at": "2026-07-06 15:45:23",
+    "filename": "93dc4562-a672-4ae3-bb17-a16895ebdcf3.jpg",
+    "stored_filename": "c86cc7429a8346599d9c5b55806dc87a.jpg",
+    "image_url": "/uploads/c86cc7429a8346599d9c5b55806dc87a.jpg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "IA_GERADA_EDITADA",
+    "report": "VEREDITO: IA_GERADA_EDITADA\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.\nTIPO: IA\nSCORE_ALTERACAO: 92\nEVIDENCIAS: rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "duration_seconds": "0.82",
+    "source": "calibracao_sha256",
+    "forensic_score": 92,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem alterada/gerada por IA"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "75dda8601fd049b6b19c71cf20b7829a",
+    "created_at": "2026-07-06 12:05:10",
+    "filename": "93dc4562-a672-4ae3-bb17-a16895ebdcf3.jpg",
+    "stored_filename": "75dda8601fd049b6b19c71cf20b7829a.jpg",
+    "image_url": "/uploads/75dda8601fd049b6b19c71cf20b7829a.jpg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "IA_GERADA_EDITADA",
+    "report": "VEREDITO: IA_GERADA_EDITADA\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.\nTIPO: IA\nSCORE_ALTERACAO: 92\nEVIDENCIAS: rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "duration_seconds": "0.64",
+    "source": "calibracao_sha256",
+    "forensic_score": 92,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem alterada/gerada por IA"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "25e852c9f5c9447198707d2c09bb705e",
+    "created_at": "2026-07-06 12:04:56",
+    "filename": "93dc4562-a672-4ae3-bb17-a16895ebdcf3.jpg",
+    "stored_filename": "25e852c9f5c9447198707d2c09bb705e.jpg",
+    "image_url": "/uploads/25e852c9f5c9447198707d2c09bb705e.jpg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "IA_GERADA_EDITADA",
+    "report": "VEREDITO: IA_GERADA_EDITADA\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.\nTIPO: IA\nSCORE_ALTERACAO: 92\nEVIDENCIAS: rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "duration_seconds": "0.76",
+    "source": "calibracao_sha256",
+    "forensic_score": 92,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem alterada/gerada por IA"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "846765de9016496398e41ee47a21bdf1",
+    "created_at": "2026-07-06 12:01:15",
+    "filename": "93dc4562-a672-4ae3-bb17-a16895ebdcf3.jpg",
+    "stored_filename": "846765de9016496398e41ee47a21bdf1.jpg",
+    "image_url": "/uploads/846765de9016496398e41ee47a21bdf1.jpg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "calibracao_local",
+    "verdict": "IA_GERADA_EDITADA",
+    "report": "VEREDITO: IA_GERADA_EDITADA\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.\nTIPO: IA\nSCORE_ALTERACAO: 92\nEVIDENCIAS: rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "duration_seconds": "0.01",
+    "source": "feedback_usuario",
+    "forensic_score": 92,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem alterada/gerada por IA"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "88dc4c48185a49a79d2374dbd35909cd",
+    "created_at": "2026-07-06 11:59:14",
+    "filename": "93dc4562-a672-4ae3-bb17-a16895ebdcf3.jpg",
+    "stored_filename": "88dc4c48185a49a79d2374dbd35909cd.jpg",
+    "image_url": "/uploads/88dc4c48185a49a79d2374dbd35909cd.jpg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "calibracao_local",
+    "verdict": "IA_GERADA_EDITADA",
+    "report": "VEREDITO: IA_GERADA_EDITADA\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.\nTIPO: IA\nSCORE_ALTERACAO: 92\nEVIDENCIAS: rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "duration_seconds": "0.01",
+    "source": "feedback_usuario",
+    "forensic_score": 92,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem alterada/gerada por IA"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "626bf21b49a543b2ab542428df43d0dd",
+    "created_at": "2026-07-06 11:52:51",
+    "filename": "93dc4562-a672-4ae3-bb17-a16895ebdcf3.jpg",
+    "stored_filename": "626bf21b49a543b2ab542428df43d0dd.jpg",
+    "image_url": "/uploads/626bf21b49a543b2ab542428df43d0dd.jpg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "calibracao_local",
+    "verdict": "IA_GERADA_EDITADA",
+    "report": "VEREDITO: IA_GERADA_EDITADA\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.\nTIPO: IA\nSCORE_ALTERACAO: 92\nEVIDENCIAS: rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "duration_seconds": "0.01",
+    "source": "feedback_usuario",
+    "forensic_score": 92,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem alterada/gerada por IA"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "3a8696d2b8c74b6ab30f98716c3aa3fc",
+    "created_at": "2026-07-06 11:48:12",
+    "filename": "eeffff65456bf8e742dd34884212830ecdac60655844b90f124981680e6812bf.jpeg",
+    "stored_filename": "3a8696d2b8c74b6ab30f98716c3aa3fc.jpeg",
+    "image_url": "/uploads/3a8696d2b8c74b6ab30f98716c3aa3fc.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 61\nEVIDENCIAS: marcacao colorida sobreposta detectada; LLM: sem evidencias adicionais informadas",
+    "duration_seconds": "111.29",
+    "source": "hibrido_local_llm",
+    "forensic_score": 70,
+    "forensic_evidence": [
+      "marcacao colorida sobreposta detectada"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.398,
+      "ela_p95": 4.0,
+      "ela_block_cv": 0.313,
+      "laplacian_var": 175.572,
+      "sharpness_block_cv": 0.597,
+      "noise_mean": 1.77,
+      "noise_block_cv": 0.602,
+      "saturated_overlay_ratio": 0.00159,
+      "marker_overlay_ratio": 0.00159,
+      "green_marker_ratio": 0.0,
+      "dhash": "f0f1e9e5edcd1b9b",
+      "nearest_calibration_distance": 29,
+      "feature_profile": {
+        "ela_mean": 0.11649999999999999,
+        "ela_p95": 0.125,
+        "ela_block_cv": 0.195625,
+        "laplacian_log": 0.6467160906503802,
+        "sharpness_block_cv": 0.33166666666666667,
+        "noise_mean": 0.22125,
+        "noise_block_cv": 0.37625,
+        "saturated_overlay": 0.5565,
+        "marker_overlay": 0.7155,
+        "green_marker": 0.0
+      },
+      "nearest_pattern": {
+        "label": "IA_GERADA_EDITADA",
+        "distance": 0.1985,
+        "filename": "0257098ed2c24fd2a6053ab0f1752085.jpeg"
+      }
+    }
+  },
+  {
+    "id": "10734dfdff08441ca9291123e21abcc1",
+    "created_at": "2026-07-06 11:44:54",
+    "filename": "vanessa c.jpeg",
+    "stored_filename": "10734dfdff08441ca9291123e21abcc1.jpeg",
+    "image_url": "/uploads/10734dfdff08441ca9291123e21abcc1.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta modificacao visual detectada, como linha, seta, desenho ou anotacao sobreposta.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 80\nEVIDENCIAS: linha ou seta verde sobreposta detectada",
+    "duration_seconds": "1.10",
+    "source": "forense_local",
+    "forensic_score": 80,
+    "forensic_evidence": [
+      "linha ou seta verde sobreposta detectada"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.415,
+      "ela_p95": 4.0,
+      "ela_block_cv": 0.293,
+      "laplacian_var": 307.432,
+      "sharpness_block_cv": 0.808,
+      "noise_mean": 2.277,
+      "noise_block_cv": 0.654,
+      "saturated_overlay_ratio": 0.00271,
+      "marker_overlay_ratio": 0.00271,
+      "green_marker_ratio": 0.00046,
+      "dhash": "0c9c9c9c949cbc3c",
+      "nearest_calibration_distance": 24,
+      "feature_profile": {
+        "ela_mean": 0.11791666666666667,
+        "ela_p95": 0.125,
+        "ela_block_cv": 0.18312499999999998,
+        "laplacian_log": 0.7164376747069044,
+        "sharpness_block_cv": 0.4488888888888889,
+        "noise_mean": 0.284625,
+        "noise_block_cv": 0.40875,
+        "saturated_overlay": 0.9485,
+        "marker_overlay": 1.0,
+        "green_marker": 0.41400000000000003
+      },
+      "nearest_pattern": {
+        "label": "IA_GERADA_EDITADA",
+        "distance": 0.3515,
+        "filename": "0257098ed2c24fd2a6053ab0f1752085.jpeg"
+      }
+    }
+  },
+  {
+    "id": "25f495490c5541da9ff66f8a211b6994",
+    "created_at": "2026-07-06 11:31:06",
+    "filename": "image1.png",
+    "stored_filename": "25f495490c5541da9ff66f8a211b6994.png",
+    "image_url": "/uploads/25f495490c5541da9ff66f8a211b6994.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada manualmente pelo usuario como exemplo modificado.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 90\nEVIDENCIAS: rotulo informado pelo usuario como imagem modificada/falsa",
+    "duration_seconds": "0.85",
+    "source": "calibracao_sha256",
+    "forensic_score": 90,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem modificada/falsa"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "6e45a54dad9642fcad0736b34acccbb9",
+    "created_at": "2026-07-06 11:28:34",
+    "filename": "image10.png",
+    "stored_filename": "6e45a54dad9642fcad0736b34acccbb9.png",
+    "image_url": "/uploads/6e45a54dad9642fcad0736b34acccbb9.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta baixa pontuacao local de alteracao e nao ha evidencias fortes de manipulacao.\nTIPO: REAL\nSCORE_ALTERACAO: 29\nEVIDENCIAS: padrao visual mais proximo de exemplo real salvo; proximo de exemplo calibrado: c584042d48584fcf928df5a58d23ea07.jpg; LLM: sem evidencias adicionais informadas",
+    "duration_seconds": "113.80",
+    "source": "hibrido_local_llm",
+    "forensic_score": 12,
+    "forensic_evidence": [
+      "padrao visual mais proximo de exemplo real salvo",
+      "proximo de exemplo calibrado: c584042d48584fcf928df5a58d23ea07.jpg"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.5,
+      "ela_p95": 4.0,
+      "ela_block_cv": 0.276,
+      "laplacian_var": 246.768,
+      "sharpness_block_cv": 1.084,
+      "noise_mean": 1.685,
+      "noise_block_cv": 0.628,
+      "saturated_overlay_ratio": 0.0,
+      "marker_overlay_ratio": 0.0,
+      "green_marker_ratio": 0.0,
+      "dhash": "db99f44d4c209d98",
+      "nearest_calibration_distance": 12,
+      "feature_profile": {
+        "ela_mean": 0.125,
+        "ela_p95": 0.125,
+        "ela_block_cv": 0.17250000000000001,
+        "laplacian_log": 0.689061603056987,
+        "sharpness_block_cv": 0.6022222222222222,
+        "noise_mean": 0.210625,
+        "noise_block_cv": 0.39249999999999996,
+        "saturated_overlay": 0.0,
+        "marker_overlay": 0.0,
+        "green_marker": 0.0
+      },
+      "nearest_pattern": {
+        "label": "REAL",
+        "distance": 0.0185,
+        "filename": "c584042d48584fcf928df5a58d23ea07.jpg"
+      }
+    }
+  },
+  {
+    "id": "33744925a74a41a2ad8d8061a2b068e7",
+    "created_at": "2026-07-06 11:15:04",
+    "filename": "bc2e1e56-7085-473d-bc4c-33f1e3011ded.jpg",
+    "stored_filename": "33744925a74a41a2ad8d8061a2b068e7.jpg",
+    "image_url": "/uploads/33744925a74a41a2ad8d8061a2b068e7.jpg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta modificacao visual detectada, como linha, seta, desenho ou anotacao sobreposta.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 84\nEVIDENCIAS: ruido local inconsistente; marcacao colorida sobreposta detectada",
+    "duration_seconds": "1.14",
+    "source": "forense_local",
+    "forensic_score": 84,
+    "forensic_evidence": [
+      "ruido local inconsistente",
+      "marcacao colorida sobreposta detectada"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 0.938,
+      "ela_p95": 3.0,
+      "ela_block_cv": 0.416,
+      "laplacian_var": 214.22,
+      "sharpness_block_cv": 0.763,
+      "noise_mean": 0.922,
+      "noise_block_cv": 0.953,
+      "saturated_overlay_ratio": 0.00422,
+      "marker_overlay_ratio": 0.00422,
+      "green_marker_ratio": 0.0,
+      "dhash": "fceaec9cff73f1f1",
+      "nearest_calibration_distance": 28,
+      "feature_profile": {
+        "ela_mean": 0.07816666666666666,
+        "ela_p95": 0.09375,
+        "ela_block_cv": 0.25999999999999995,
+        "laplacian_log": 0.6714575950965308,
+        "sharpness_block_cv": 0.42388888888888887,
+        "noise_mean": 0.11525,
+        "noise_block_cv": 0.595625,
+        "saturated_overlay": 1.0,
+        "marker_overlay": 1.0,
+        "green_marker": 0.0
+      },
+      "nearest_pattern": {
+        "label": "IA_GERADA_EDITADA",
+        "distance": 0.3275,
+        "filename": "0257098ed2c24fd2a6053ab0f1752085.jpeg"
+      }
+    }
+  },
+  {
+    "id": "d854dc95450c4036916bbe8090488e52",
+    "created_at": "2026-07-06 11:02:14",
+    "filename": "63168152-fc25-41b8-bfe5-9ca5e68c9559.jpg",
+    "stored_filename": "d854dc95450c4036916bbe8090488e52.jpg",
+    "image_url": "/uploads/d854dc95450c4036916bbe8090488e52.jpg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "calibracao_local",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como exemplo real para aprendizado local de padrao.\nTIPO: REAL\nSCORE_ALTERACAO: 8\nEVIDENCIAS: perfil visual informado pelo usuario como imagem real/original",
+    "duration_seconds": "0.01",
+    "source": "feedback_usuario",
+    "forensic_score": 8,
+    "forensic_evidence": [
+      "perfil visual informado pelo usuario como imagem real/original"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "c584042d48584fcf928df5a58d23ea07",
+    "created_at": "2026-07-06 11:00:33",
+    "filename": "63168152-fc25-41b8-bfe5-9ca5e68c9559.jpg",
+    "stored_filename": "c584042d48584fcf928df5a58d23ea07.jpg",
+    "image_url": "/uploads/c584042d48584fcf928df5a58d23ea07.jpg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta modificacao visual detectada, como linha, seta, desenho ou anotacao sobreposta.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 84\nEVIDENCIAS: padrao visual parecido com exemplo modificado salvo",
+    "duration_seconds": "1.15",
+    "source": "forense_local",
+    "forensic_score": 84,
+    "forensic_evidence": [
+      "padrao visual parecido com exemplo modificado salvo"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.24,
+      "ela_p95": 3.0,
+      "ela_block_cv": 0.263,
+      "laplacian_var": 155.893,
+      "sharpness_block_cv": 1.02,
+      "noise_mean": 1.773,
+      "noise_block_cv": 0.551,
+      "saturated_overlay_ratio": 2e-05,
+      "marker_overlay_ratio": 2e-05,
+      "green_marker_ratio": 0.0,
+      "dhash": "df99b01e0c248c99",
+      "nearest_calibration_distance": 26,
+      "feature_profile": {
+        "ela_mean": 0.10333333333333333,
+        "ela_p95": 0.09375,
+        "ela_block_cv": 0.164375,
+        "laplacian_log": 0.631945505542457,
+        "sharpness_block_cv": 0.5666666666666667,
+        "noise_mean": 0.221625,
+        "noise_block_cv": 0.344375,
+        "saturated_overlay": 0.007,
+        "marker_overlay": 0.009000000000000001,
+        "green_marker": 0.0
+      },
+      "nearest_pattern": {
+        "label": "MODIFICADO",
+        "distance": 0.0378,
+        "filename": "3e94e6849c114c0b8e0fbf0d043036f4.png"
+      }
+    }
+  },
+  {
+    "id": "ee4202b491d34990b420b187ae16acf5",
+    "created_at": "2026-07-06 10:48:04",
+    "filename": "vanessa 02-fix.jpeg",
+    "stored_filename": "ee4202b491d34990b420b187ae16acf5.jpeg",
+    "image_url": "/uploads/ee4202b491d34990b420b187ae16acf5.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 61\nEVIDENCIAS: marcacao colorida sobreposta detectada; proximo de exemplo calibrado: 47de7a6f3c314a34a79ca196a5c19a4b.jpeg; LLM: sem evidencias adicionais informadas",
+    "duration_seconds": "118.99",
+    "source": "hibrido_local_llm",
+    "forensic_score": 70,
+    "forensic_evidence": [
+      "marcacao colorida sobreposta detectada",
+      "proximo de exemplo calibrado: 47de7a6f3c314a34a79ca196a5c19a4b.jpeg"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.915,
+      "ela_p95": 5.0,
+      "ela_block_cv": 0.257,
+      "laplacian_var": 620.717,
+      "sharpness_block_cv": 1.142,
+      "noise_mean": 3.717,
+      "noise_block_cv": 0.863,
+      "saturated_overlay_ratio": 0.00414,
+      "marker_overlay_ratio": 0.00414,
+      "green_marker_ratio": 0.0,
+      "dhash": "c430a010b0207030",
+      "nearest_calibration_distance": 0,
+      "feature_profile": {
+        "ela_mean": 0.15958333333333333,
+        "ela_p95": 0.15625,
+        "ela_block_cv": 0.160625,
+        "laplacian_log": 0.8040606256599698,
+        "sharpness_block_cv": 0.6344444444444444,
+        "noise_mean": 0.464625,
+        "noise_block_cv": 0.5393749999999999,
+        "saturated_overlay": 1.0,
+        "marker_overlay": 1.0,
+        "green_marker": 0.0
+      },
+      "nearest_pattern": {
+        "label": "REAL",
+        "distance": 0.2828,
+        "filename": "47de7a6f3c314a34a79ca196a5c19a4b.jpeg"
+      }
+    }
+  },
+  {
+    "id": "e5c722a221ae4ac99d0d9e99b0d7289c",
+    "created_at": "2026-07-06 10:44:27",
+    "filename": "vanessa c.jpeg",
+    "stored_filename": "e5c722a221ae4ac99d0d9e99b0d7289c.jpeg",
+    "image_url": "/uploads/e5c722a221ae4ac99d0d9e99b0d7289c.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta modificacao visual detectada, como linha, seta, desenho ou anotacao sobreposta.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 80\nEVIDENCIAS: linha ou seta verde sobreposta detectada",
+    "duration_seconds": "0.99",
+    "source": "forense_local",
+    "forensic_score": 80,
+    "forensic_evidence": [
+      "linha ou seta verde sobreposta detectada"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.415,
+      "ela_p95": 4.0,
+      "ela_block_cv": 0.293,
+      "laplacian_var": 307.432,
+      "sharpness_block_cv": 0.808,
+      "noise_mean": 2.277,
+      "noise_block_cv": 0.654,
+      "saturated_overlay_ratio": 0.00271,
+      "marker_overlay_ratio": 0.00271,
+      "green_marker_ratio": 0.00046,
+      "dhash": "0c9c9c9c949cbc3c",
+      "nearest_calibration_distance": 24,
+      "feature_profile": {
+        "ela_mean": 0.11791666666666667,
+        "ela_p95": 0.125,
+        "ela_block_cv": 0.18312499999999998,
+        "laplacian_log": 0.7164376747069044,
+        "sharpness_block_cv": 0.4488888888888889,
+        "noise_mean": 0.284625,
+        "noise_block_cv": 0.40875,
+        "saturated_overlay": 0.9485,
+        "marker_overlay": 1.0,
+        "green_marker": 0.41400000000000003
+      },
+      "nearest_pattern": {
+        "label": "IA_GERADA_EDITADA",
+        "distance": 0.3515,
+        "filename": "0257098ed2c24fd2a6053ab0f1752085.jpeg"
+      }
+    }
+  },
+  {
+    "id": "9db7f651eaa846329a227dfec7bdbfb7",
+    "created_at": "2026-07-06 10:17:51",
+    "filename": "0a673b493e7542fb9102216d82fe5b52.png",
+    "stored_filename": "9db7f651eaa846329a227dfec7bdbfb7.png",
+    "image_url": "/uploads/9db7f651eaa846329a227dfec7bdbfb7.png",
+    "original_filename": "50b839ad68334ee4b411d2efb1f8fe5d.jpeg",
+    "original_stored_filename": "4eebd49ffa2c45f99455dfd2d657ca7f.jpeg",
+    "original_image_url": "/uploads/4eebd49ffa2c45f99455dfd2d657ca7f.jpeg",
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como modificada em comparacao com a original enviada.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 90\nEVIDENCIAS: perfil visual informado pelo usuario como imagem modificada/falsa; padrao comparativo salvo contra imagem original",
+    "duration_seconds": "0.54",
+    "source": "calibracao_sha256",
+    "forensic_score": 90,
+    "forensic_evidence": [
+      "perfil visual informado pelo usuario como imagem modificada/falsa; padrao comparativo salvo contra imagem original"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "445d2283f5304866b8dd4bd842b46e0c",
+    "created_at": "2026-07-06 10:17:03",
+    "filename": "image1.png",
+    "stored_filename": "445d2283f5304866b8dd4bd842b46e0c.png",
+    "image_url": "/uploads/445d2283f5304866b8dd4bd842b46e0c.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada manualmente pelo usuario como exemplo modificado.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 90\nEVIDENCIAS: rotulo informado pelo usuario como imagem modificada/falsa",
+    "duration_seconds": "0.75",
+    "source": "calibracao_sha256",
+    "forensic_score": 90,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem modificada/falsa"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "71593df2de35476bbcb74895141c1b65",
+    "created_at": "2026-07-06 10:12:36",
+    "filename": "0a673b493e7542fb9102216d82fe5b52.png",
+    "stored_filename": "71593df2de35476bbcb74895141c1b65.png",
+    "image_url": "/uploads/71593df2de35476bbcb74895141c1b65.png",
+    "original_filename": "50b839ad68334ee4b411d2efb1f8fe5d.jpeg",
+    "original_stored_filename": "4d315bf9e6a1411384e1730233f7c726.jpeg",
+    "original_image_url": "/uploads/4d315bf9e6a1411384e1730233f7c726.jpeg",
+    "model": "calibracao_local",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como modificada em comparacao com a original enviada.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 90\nEVIDENCIAS: perfil visual informado pelo usuario como imagem modificada/falsa; padrao comparativo salvo contra imagem original",
+    "duration_seconds": "0.01",
+    "source": "feedback_usuario_comparacao",
+    "forensic_score": 90,
+    "forensic_evidence": [
+      "perfil visual informado pelo usuario como imagem modificada/falsa; padrao comparativo salvo contra imagem original"
+    ],
+    "forensic_metrics": {
+      "comparison": {
+        "dhash_distance": 5,
+        "mean_diff": 13.829,
+        "central_mean_diff": 16.054,
+        "high_diff_ratio": 0.11075,
+        "central_high_diff_ratio": 0.14158,
+        "same_scene": true
+      }
+    }
+  },
+  {
+    "id": "4ddbf9009ac04b06a36565607574d136",
+    "created_at": "2026-07-06 10:12:21",
+    "filename": "0a673b493e7542fb9102216d82fe5b52.png",
+    "stored_filename": "4ddbf9009ac04b06a36565607574d136.png",
+    "image_url": "/uploads/4ddbf9009ac04b06a36565607574d136.png",
+    "original_filename": "50b839ad68334ee4b411d2efb1f8fe5d.jpeg",
+    "original_stored_filename": "f183f320720044b590fa42a781d51400.jpeg",
+    "original_image_url": "/uploads/f183f320720044b590fa42a781d51400.jpeg",
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como modificada em comparacao com a original enviada.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 90\nEVIDENCIAS: perfil visual informado pelo usuario como imagem modificada/falsa; padrao comparativo salvo contra imagem original",
+    "duration_seconds": "0.53",
+    "source": "calibracao_sha256",
+    "forensic_score": 90,
+    "forensic_evidence": [
+      "perfil visual informado pelo usuario como imagem modificada/falsa; padrao comparativo salvo contra imagem original"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "29659fb0a7ea4af18327a35e80229d59",
+    "created_at": "2026-07-06 10:00:53",
+    "filename": "teeth2.png",
+    "stored_filename": "29659fb0a7ea4af18327a35e80229d59.png",
+    "image_url": "/uploads/29659fb0a7ea4af18327a35e80229d59.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: media\nJUSTIFICATIVA: A imagem apresenta modificacao visual detectada, como linha, seta, desenho ou anotacao sobreposta.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 84\nEVIDENCIAS: padrao visual parecido com exemplo modificado salvo",
+    "duration_seconds": "1.23",
+    "source": "forense_local",
+    "forensic_score": 84,
+    "forensic_evidence": [
+      "padrao visual parecido com exemplo modificado salvo"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.657,
+      "ela_p95": 5.0,
+      "ela_block_cv": 0.356,
+      "laplacian_var": 402.268,
+      "sharpness_block_cv": 0.848,
+      "noise_mean": 2.691,
+      "noise_block_cv": 0.604,
+      "saturated_overlay_ratio": 0.0,
+      "marker_overlay_ratio": 0.0,
+      "green_marker_ratio": 0.0,
+      "dhash": "0c9c9c9cb4bcbc3c",
+      "nearest_calibration_distance": 24,
+      "feature_profile": {
+        "ela_mean": 0.13808333333333334,
+        "ela_p95": 0.15625,
+        "ela_block_cv": 0.22249999999999998,
+        "laplacian_log": 0.7499501691663579,
+        "sharpness_block_cv": 0.4711111111111111,
+        "noise_mean": 0.336375,
+        "noise_block_cv": 0.37749999999999995,
+        "saturated_overlay": 0.0,
+        "marker_overlay": 0.0,
+        "green_marker": 0.0
+      },
+      "nearest_pattern": {
+        "label": "MODIFICADO",
+        "distance": 0.0196,
+        "filename": "3e94e6849c114c0b8e0fbf0d043036f4.png"
+      }
+    }
+  },
+  {
+    "id": "50b839ad68334ee4b411d2efb1f8fe5d",
+    "created_at": "2026-07-06 09:58:33",
+    "filename": "vanessa 02.jpeg",
+    "stored_filename": "50b839ad68334ee4b411d2efb1f8fe5d.jpeg",
+    "image_url": "/uploads/50b839ad68334ee4b411d2efb1f8fe5d.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "calibracao_local",
+    "verdict": "REAL",
+    "report": "VEREDITO: REAL\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada pelo usuario como exemplo real para aprendizado local de padrao.\nTIPO: REAL\nSCORE_ALTERACAO: 8\nEVIDENCIAS: perfil visual informado pelo usuario como imagem real/original",
+    "duration_seconds": "0.01",
+    "source": "feedback_usuario",
+    "forensic_score": 8,
+    "forensic_evidence": [
+      "perfil visual informado pelo usuario como imagem real/original"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "ce28c2d5cd3d4a8892821727a717ba96",
+    "created_at": "2026-07-06 09:55:01",
+    "filename": "vanessa 02.jpeg",
+    "stored_filename": "ce28c2d5cd3d4a8892821727a717ba96.jpeg",
+    "image_url": "/uploads/ce28c2d5cd3d4a8892821727a717ba96.jpeg",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada manualmente pelo usuario como exemplo modificado.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 90\nEVIDENCIAS: similaridade perceptual com 0a673b493e7542fb9102216d82fe5b52.png; distancia dHash 5",
+    "duration_seconds": "0.56",
+    "source": "calibracao_perceptual",
+    "forensic_score": 90,
+    "forensic_evidence": [
+      "similaridade perceptual com 0a673b493e7542fb9102216d82fe5b52.png; distancia dHash 5"
+    ],
+    "forensic_metrics": {
+      "perceptual_distance": 5
+    }
+  },
+  {
+    "id": "ef9b3e130721418a99396ff6ef923d36",
+    "created_at": "2026-07-06 09:53:59",
+    "filename": "image2.png",
+    "stored_filename": "ef9b3e130721418a99396ff6ef923d36.png",
+    "image_url": "/uploads/ef9b3e130721418a99396ff6ef923d36.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "calibracao_local",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada manualmente pelo usuario como exemplo modificado.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 90\nEVIDENCIAS: rotulo informado pelo usuario como imagem modificada/falsa",
+    "duration_seconds": "0.01",
+    "source": "feedback_usuario",
+    "forensic_score": 90,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem modificada/falsa"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "0a673b493e7542fb9102216d82fe5b52",
+    "created_at": "2026-07-06 09:53:53",
+    "filename": "image2.png",
+    "stored_filename": "0a673b493e7542fb9102216d82fe5b52.png",
+    "image_url": "/uploads/0a673b493e7542fb9102216d82fe5b52.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 37\nEVIDENCIAS: ha pequenos tracos coloridos incomuns; LLM: sem evidencias adicionais informadas",
+    "duration_seconds": "108.77",
+    "source": "hibrido_local_llm",
+    "forensic_score": 26,
+    "forensic_evidence": [
+      "ha pequenos tracos coloridos incomuns"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 2.08,
+      "ela_p95": 6.0,
+      "ela_block_cv": 0.354,
+      "laplacian_var": 863.185,
+      "sharpness_block_cv": 1.106,
+      "noise_mean": 3.726,
+      "noise_block_cv": 0.861,
+      "saturated_overlay_ratio": 0.00075,
+      "marker_overlay_ratio": 1e-05,
+      "green_marker_ratio": 0.0,
+      "dhash": "4030a020b0307030",
+      "nearest_calibration_distance": 31
+    }
+  },
+  {
+    "id": "a1c41c91ecaa4d95b0e53d661fc6ad1f",
+    "created_at": "2026-07-06 09:51:58",
+    "filename": "image1.png",
+    "stored_filename": "a1c41c91ecaa4d95b0e53d661fc6ad1f.png",
+    "image_url": "/uploads/a1c41c91ecaa4d95b0e53d661fc6ad1f.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "calibracao_local",
+    "verdict": "MODIFICADO",
+    "report": "VEREDITO: MODIFICADO\nCONFIANCA: alta\nJUSTIFICATIVA: A imagem foi marcada manualmente pelo usuario como exemplo modificado.\nTIPO: MODIFICADO\nSCORE_ALTERACAO: 90\nEVIDENCIAS: rotulo informado pelo usuario como imagem modificada/falsa",
+    "duration_seconds": "0.01",
+    "source": "feedback_usuario",
+    "forensic_score": 90,
+    "forensic_evidence": [
+      "rotulo informado pelo usuario como imagem modificada/falsa"
+    ],
+    "forensic_metrics": {}
+  },
+  {
+    "id": "7bcb64c4e9dd4126a00d60acd4449ce0",
+    "created_at": "2026-07-06 09:50:24",
+    "filename": "image1.png",
+    "stored_filename": "7bcb64c4e9dd4126a00d60acd4449ce0.png",
+    "image_url": "/uploads/7bcb64c4e9dd4126a00d60acd4449ce0.png",
+    "original_filename": null,
+    "original_stored_filename": null,
+    "original_image_url": null,
+    "model": "codex-dental:latest",
+    "verdict": "INDETERMINADO",
+    "report": "VEREDITO: INDETERMINADO\nCONFIANCA: baixa\nJUSTIFICATIVA: A imagem apresenta evidencias insuficientes para classificar a integridade com seguranca.\nTIPO: INDETERMINADO\nSCORE_ALTERACAO: 37\nEVIDENCIAS: nitidez inconsistente entre regioes; LLM: sem evidencias adicionais informadas",
+    "duration_seconds": "110.57",
+    "source": "hibrido_local_llm",
+    "forensic_score": 26,
+    "forensic_evidence": [
+      "nitidez inconsistente entre regioes"
+    ],
+    "forensic_metrics": {
+      "ela_mean": 1.652,
+      "ela_p95": 5.0,
+      "ela_block_cv": 0.342,
+      "laplacian_var": 421.392,
+      "sharpness_block_cv": 1.19,
+      "noise_mean": 2.545,
+      "noise_block_cv": 0.565,
+      "saturated_overlay_ratio": 0.0,
+      "marker_overlay_ratio": 0.0,
+      "green_marker_ratio": 0.0,
+      "dhash": "e391519bd694f8d1",
+      "nearest_calibration_distance": 29
+    }
+  },
+  {
     "id": "4f247f973eac46abad3d08f8c12934e9",
     "created_at": "2026-07-06 09:38:49",
     "filename": "image1.png",
