@@ -126,6 +126,19 @@ def open_rgb(path: Path, max_side: int = 1024) -> Image.Image:
     return image
 
 
+def image_dimension_metrics(path: Path) -> dict[str, Any]:
+    image = Image.open(path)
+    image = ImageOps.exif_transpose(image)
+    width, height = image.size
+    megapixels = (width * height) / 1_000_000
+    return {
+        "image_width": int(width),
+        "image_height": int(height),
+        "image_megapixels": round(float(megapixels), 3),
+        "image_min_side": int(min(width, height)),
+    }
+
+
 def image_to_gray_array(path: Path, max_side: int = 768) -> np.ndarray:
     image = open_rgb(path, max_side=max_side).convert("L")
     return np.asarray(image, dtype=np.float32)
@@ -209,30 +222,135 @@ def noise_metrics(path: Path) -> dict[str, float]:
     }
 
 
-def overlay_metrics(path: Path) -> dict[str, float]:
+def region_position_label(centroid_x: float, centroid_y: float) -> str:
+    horizontal = "esquerda" if centroid_x < 33 else "centro" if centroid_x < 66 else "direita"
+    vertical = "superior" if centroid_y < 33 else "central" if centroid_y < 66 else "inferior"
+    return f"regiao {vertical} {horizontal}"
+
+
+def mask_regions(mask: np.ndarray, width: int, height: int, *, limit: int = 5) -> list[dict[str, Any]]:
+    visited = np.zeros(mask.shape, dtype=bool)
+    regions: list[dict[str, Any]] = []
+    ys, xs = np.where(mask)
+    for start_y, start_x in zip(ys, xs):
+        if visited[start_y, start_x]:
+            continue
+        stack = [(int(start_y), int(start_x))]
+        visited[start_y, start_x] = True
+        points_x: list[int] = []
+        points_y: list[int] = []
+        while stack:
+            y, x = stack.pop()
+            points_x.append(x)
+            points_y.append(y)
+            for ny in (y - 1, y, y + 1):
+                for nx in (x - 1, x, x + 1):
+                    if ny == y and nx == x:
+                        continue
+                    if ny < 0 or nx < 0 or ny >= mask.shape[0] or nx >= mask.shape[1]:
+                        continue
+                    if visited[ny, nx] or not mask[ny, nx]:
+                        continue
+                    visited[ny, nx] = True
+                    stack.append((ny, nx))
+        area = len(points_x)
+        if area < 8:
+            continue
+        min_x = min(points_x)
+        max_x = max(points_x)
+        min_y = min(points_y)
+        max_y = max(points_y)
+        centroid_x = float(np.mean(points_x) / max(width, 1) * 100)
+        centroid_y = float(np.mean(points_y) / max(height, 1) * 100)
+        regions.append(
+            {
+                "area_px": area,
+                "bbox_px": [min_x, min_y, max_x, max_y],
+                "bbox_percent": [
+                    round(min_x / max(width, 1) * 100, 1),
+                    round(min_y / max(height, 1) * 100, 1),
+                    round(max_x / max(width, 1) * 100, 1),
+                    round(max_y / max(height, 1) * 100, 1),
+                ],
+                "centroid_percent": [round(centroid_x, 1), round(centroid_y, 1)],
+                "position": region_position_label(centroid_x, centroid_y),
+            }
+        )
+    regions.sort(key=lambda region: int(region["area_px"]), reverse=True)
+    return regions[:limit]
+
+
+def overlay_metrics(path: Path) -> dict[str, Any]:
     image = open_rgb(path, max_side=768)
     arr = np.asarray(image, dtype=np.float32) / 255.0
     max_channel = np.max(arr, axis=2)
     min_channel = np.min(arr, axis=2)
     saturation = max_channel - min_channel
-    red = (arr[:, :, 0] > 0.76) & (arr[:, :, 1] < 0.42) & (arr[:, :, 2] < 0.42) & (saturation > 0.34)
+    red = (arr[:, :, 0] > 0.86) & (arr[:, :, 1] < 0.28) & (arr[:, :, 2] < 0.28) & (saturation > 0.58)
     green = (arr[:, :, 1] > 0.58) & (arr[:, :, 0] < 0.48) & (arr[:, :, 2] < 0.55) & (saturation > 0.28)
     cyan_blue = (arr[:, :, 2] > 0.60) & (arr[:, :, 0] < 0.45) & (saturation > 0.32)
     marker_overlay = red | green | cyan_blue
     strong_overlay = marker_overlay
+    regions = mask_regions(marker_overlay, image.width, image.height)
     return {
         "saturated_overlay_ratio": round(float(np.mean(strong_overlay)), 5),
         "marker_overlay_ratio": round(float(np.mean(marker_overlay)), 5),
         "green_marker_ratio": round(float(np.mean(green)), 5),
+        "red_marker_ratio": round(float(np.mean(red)), 5),
+        "blue_marker_ratio": round(float(np.mean(cyan_blue)), 5),
+        "overlay_regions": regions,
+    }
+
+
+def quality_assessment(metrics: dict[str, Any]) -> dict[str, Any]:
+    min_side = int(metrics.get("image_min_side", 0))
+    megapixels = float(metrics.get("image_megapixels", 0.0))
+    laplacian = float(metrics.get("laplacian_var", 0.0))
+    sharpness_cv = float(metrics.get("sharpness_block_cv", 0.0))
+    reasons: list[str] = []
+
+    if min_side < 320:
+        reasons.append("resolucao baixa: menor lado abaixo de 320 px")
+    if megapixels < 0.18:
+        reasons.append("resolucao baixa: menos de 0.18 megapixel")
+    if laplacian < 14:
+        reasons.append("nitidez global muito baixa")
+
+    if reasons:
+        status = "insuficiente"
+    else:
+        if min_side < 520:
+            reasons.append("resolucao limitada: menor lado abaixo de 520 px")
+        if megapixels < 0.45:
+            reasons.append("resolucao limitada: menos de 0.45 megapixel")
+        if laplacian < 35:
+            reasons.append("nitidez global limitada")
+        if sharpness_cv >= 1.35:
+            reasons.append("nitidez muito desigual entre regioes")
+        status = "limitada" if reasons else "boa"
+
+    if laplacian < 14:
+        blur_level = "alto"
+    elif laplacian < 35:
+        blur_level = "moderado"
+    else:
+        blur_level = "baixo"
+
+    return {
+        "quality_status": status,
+        "quality_reasons": reasons,
+        "blur_level": blur_level,
     }
 
 
 def local_metrics(path: Path) -> dict[str, Any]:
     metrics: dict[str, Any] = {}
+    metrics.update(image_dimension_metrics(path))
     metrics.update(ela_metrics(path))
     metrics.update(sharpness_metrics(path))
     metrics.update(noise_metrics(path))
     metrics.update(overlay_metrics(path))
+    metrics.update(quality_assessment(metrics))
     return metrics
 
 
@@ -392,6 +510,9 @@ def result_from_calibration(entry: dict[str, Any], source: str, exact: bool, per
     score = clamp(float(entry.get("score", 50)))
     label = verdict_from_score(score, str(entry.get("label", "INDETERMINADO")))
     evidence = [str(entry.get("evidence", "")).strip() or "imagem corresponde a exemplo calibrado local"]
+    metrics: dict[str, Any] = {}
+    if entry.get("quality_status"):
+        metrics["quality_status"] = entry.get("quality_status")
     return ForensicResult(
         score=score,
         verdict_hint=label,
@@ -401,6 +522,7 @@ def result_from_calibration(entry: dict[str, Any], source: str, exact: bool, per
         skip_llm=True,
         exact_match=exact,
         perceptual_match=perceptual,
+        metrics=metrics,
         calibration_entry=entry,
     )
 
@@ -409,21 +531,46 @@ def score_single_image(metrics: dict[str, float]) -> tuple[int, list[str], str |
     score = 12
     evidence: list[str] = []
     preferred: str | None = None
+    quality_status = str(metrics.get("quality_status", "boa"))
+    quality_reasons = metrics.get("quality_reasons", [])
+    if quality_status == "insuficiente":
+        if isinstance(quality_reasons, list) and quality_reasons:
+            evidence.append(
+                "qualidade insuficiente para pericia visual confiavel: "
+                + "; ".join(str(reason) for reason in quality_reasons[:3])
+            )
+        else:
+            evidence.append("qualidade insuficiente para pericia visual confiavel")
+    elif quality_status == "limitada":
+        if isinstance(quality_reasons, list) and quality_reasons:
+            evidence.append(
+                "qualidade limitada; conclusao exige cautela: "
+                + "; ".join(str(reason) for reason in quality_reasons[:2])
+            )
+        else:
+            evidence.append("qualidade limitada; conclusao exige cautela")
+
+    overlay_regions = metrics.get("overlay_regions", [])
+    overlay_position = ""
+    if isinstance(overlay_regions, list) and overlay_regions:
+        first_region = overlay_regions[0]
+        if isinstance(first_region, dict) and first_region.get("position"):
+            overlay_position = f" na {first_region['position']}"
 
     if metrics["ela_p95"] >= 18 and metrics["ela_block_cv"] >= 0.65:
         score += 18
-        evidence.append("ELA mostra recompressao irregular por regioes")
+        evidence.append("ELA indica recompressao irregular entre regioes, sugerindo que partes da imagem podem ter historico de edicao diferente")
     elif metrics["ela_p95"] >= 24:
         score += 10
-        evidence.append("ELA alto em parte da imagem")
+        evidence.append("ELA elevado em areas especificas, compatível com alteracao localizada ou compressao desigual")
 
     if metrics["sharpness_block_cv"] >= 1.15:
         score += 14
-        evidence.append("nitidez inconsistente entre regioes")
+        evidence.append("nitidez inconsistente entre regioes, com contraste fino variando mais do que o esperado para uma captura uniforme")
 
     if metrics["noise_block_cv"] >= 0.95:
         score += 14
-        evidence.append("ruido local inconsistente")
+        evidence.append("ruido local inconsistente, indicando que diferentes areas podem ter sido processadas ou reconstruidas de forma desigual")
 
     marker_ratio = metrics.get("marker_overlay_ratio", 0.0)
     green_ratio = metrics.get("green_marker_ratio", 0.0)
@@ -431,22 +578,43 @@ def score_single_image(metrics: dict[str, float]) -> tuple[int, list[str], str |
     if green_ratio >= 0.00035:
         score += 68
         preferred = "MODIFICADO"
-        evidence.append("linha ou seta verde sobreposta detectada")
+        evidence.append(f"linha ou seta verde sobreposta detectada{overlay_position}, com cor artificial destoando do padrao odontologico da imagem")
     elif marker_ratio >= 0.0008:
         score += 58
         preferred = "MODIFICADO"
-        evidence.append("marcacao colorida sobreposta detectada")
+        evidence.append(f"marcacao colorida sobreposta detectada{overlay_position}, sugerindo anotacao manual ou edicao grafica aplicada sobre a imagem")
     elif saturated_ratio >= 0.002:
         score += 38
         preferred = "MODIFICADO"
-        evidence.append("pixels saturados finos sugerem desenho ou anotacao")
+        evidence.append(f"pixels saturados e finos{overlay_position} sugerem desenho, contorno ou anotacao adicionada digitalmente")
     elif saturated_ratio >= 0.0007:
         score += 14
-        evidence.append("ha pequenos tracos coloridos incomuns")
+        evidence.append("pequenos tracos coloridos incomuns aparecem fora do padrao natural esperado para a captura")
 
     if metrics["laplacian_var"] < 18 and metrics["noise_mean"] < 3.5:
         score += 8
-        evidence.append("textura muito lisa para foto clinica detalhada")
+        evidence.append("textura excessivamente lisa para uma imagem clinica detalhada, o que pode indicar suavizacao ou reconstrucao")
+
+    if metrics["ela_block_cv"] >= 0.35 and metrics["ela_p95"] >= 5:
+        score += 6
+        evidence.append("assinatura de compressao varia por blocos, com resposta diferente entre areas vizinhas")
+
+    if metrics["sharpness_block_cv"] >= 0.75 and metrics["noise_block_cv"] >= 0.60:
+        score += 6
+        evidence.append("mapa de nitidez e ruido aponta transicoes regionais pouco uniformes")
+
+    if metrics["marker_overlay_ratio"] >= 0.0015 and metrics["green_marker_ratio"] < 0.00035:
+        score += 6
+        evidence.append("pixels coloridos de alta saturacao formam agrupamentos compativeis com marca visual sobreposta")
+
+    if metrics["laplacian_var"] >= 500 and metrics["noise_mean"] >= 3.0:
+        evidence.append("imagem apresenta alto nivel de detalhe e ruido, exigindo cautela para diferenciar textura real de artefato")
+
+    if metrics["ela_mean"] <= 0.6 and metrics["noise_mean"] <= 1.5 and metrics["marker_overlay_ratio"] < 0.0003:
+        evidence.append("compressao e ruido globais estao relativamente uniformes, sem forte sinal local de manipulacao")
+
+    if metrics["green_marker_ratio"] >= 0.0001 and metrics["green_marker_ratio"] < 0.00035:
+        evidence.append("ha sinal verde discreto, abaixo do limiar forte, mas ainda relevante para revisao visual")
 
     return clamp(score), evidence, preferred
 
@@ -459,7 +627,7 @@ def apply_original_comparison(score: int, evidence: list[str], metrics: dict[str
 
     if not comparison.get("same_scene"):
         score += 12
-        evidence.append("imagem original enviada parece nao corresponder a mesma cena")
+        evidence.append("imagem original enviada parece nao corresponder a mesma cena, reduzindo a confiabilidade da comparacao direta")
         return clamp(score), preferred
 
     central_diff = float(comparison.get("central_mean_diff", 0))
@@ -469,21 +637,21 @@ def apply_original_comparison(score: int, evidence: list[str], metrics: dict[str
     if distance <= 4 and central_diff >= 9 and high_ratio >= 0.01:
         score += 72
         preferred = "IA_GERADA_EDITADA"
-        evidence.append("mesma cena da original com alteracao localizada compativel com reconstrucao por IA")
+        evidence.append("mesma cena da original com alteracao localizada, compativel com substituicao ou reconstrucao digital por IA")
     elif central_diff >= 24 and high_ratio >= 0.18:
         score += 58
         preferred = "IA_GERADA_EDITADA"
-        evidence.append("comparacao com original mostra mudanca forte em regioes centrais")
+        evidence.append("comparacao com original mostra mudanca forte em regioes centrais, onde dentes e tecidos deveriam manter maior coerencia")
     elif central_diff >= 14 and high_ratio >= 0.08:
         score += 38
         preferred = "ALTERADA_DIGITALMENTE"
-        evidence.append("comparacao com original mostra edicao localizada")
+        evidence.append("comparacao com original mostra edicao localizada, com diferenca visual concentrada em areas relevantes")
     elif central_diff >= 8 or distance > 10:
         score += 18
-        evidence.append("comparacao com original mostra diferencas moderadas")
+        evidence.append("comparacao com original mostra diferencas moderadas, possivelmente por angulo, compressao ou edicao leve")
     else:
         score -= 8
-        evidence.append("comparacao com original nao mostra mudanca relevante")
+        evidence.append("comparacao com original nao mostra mudanca relevante nas regioes centrais avaliadas")
 
     return clamp(score), preferred
 
@@ -524,11 +692,11 @@ def apply_pattern_learning(
                 if best_pair_distance <= 0.10:
                     score = max(score, 88)
                     preferred = "IA_GERADA_EDITADA" if best_pair.label == "IA_GERADA_EDITADA" else "MODIFICADO"
-                    evidence.append("padrao de diferenca com original parecido com par modificado salvo")
+                    evidence.append("padrao de diferenca com original e muito parecido com par modificado salvo na calibracao local")
                 elif best_pair_distance <= 0.18:
                     score = max(score, 74)
                     preferred = preferred or "MODIFICADO"
-                    evidence.append("diferenca com original parcialmente parecida com exemplos modificados")
+                    evidence.append("diferenca com original parcialmente parecida com exemplos modificados ja ensinados ao sistema")
 
     current_features = feature_profile_from_metrics(metrics)
     metrics["feature_profile"] = current_features
@@ -569,7 +737,7 @@ def apply_pattern_learning(
         if real_is_clearly_closer:
             score = min(score, 24)
             preferred = "REAL"
-            evidence.append("padrao visual mais proximo de exemplo real salvo")
+            evidence.append("padrao visual mais proximo de exemplo real salvo, favorecendo classificacao conservadora como imagem autentica")
             return clamp(score), preferred
 
     if best_modified_sample is not None:
@@ -579,11 +747,11 @@ def apply_pattern_learning(
         if best_modified_distance <= 0.08 and clearly_closer_than_real:
             score = max(score, 84)
             preferred = "MODIFICADO" if best_modified_sample.label != "IA_GERADA_EDITADA" else "IA_GERADA_EDITADA"
-            evidence.append("padrao visual parecido com exemplo modificado salvo")
+            evidence.append("padrao visual muito parecido com exemplo modificado salvo, considerando metricas locais e calibracao")
         elif best_modified_distance <= 0.14 and clearly_closer_than_real:
             score = max(score, 68)
             preferred = preferred or "MODIFICADO"
-            evidence.append("padrao visual parcialmente parecido com exemplos modificados")
+            evidence.append("padrao visual parcialmente parecido com exemplos modificados, mas ainda dependente de outras evidencias")
 
     return clamp(score), preferred
 
@@ -675,9 +843,35 @@ def analyze_forensics(
     if not evidence:
         evidence.append("sem sinais locais fortes de edicao")
 
+    modified_labels = {"MODIFICADO", "IA_GERADA_EDITADA", "ALTERADA_MANUALMENTE", "ALTERADA_DIGITALMENTE"}
+    quality_status = str(metrics.get("quality_status", "boa"))
+    strong_fraud_signal = (
+        preferred in modified_labels
+        and score >= 60
+    ) or score >= 82
+
+    if quality_status == "insuficiente" and not strong_fraud_signal:
+        quality_evidence = [
+            item for item in evidence if "qualidade insuficiente" in item or "qualidade limitada" in item
+        ]
+        other_evidence = [item for item in evidence if item not in quality_evidence]
+        return ForensicResult(
+            score=50,
+            verdict_hint="INDETERMINADO",
+            confidence="baixa",
+            evidence=(quality_evidence + other_evidence)[:5],
+            source="qualidade_insuficiente",
+            skip_llm=True,
+            original_used=original_path is not None,
+            metrics=metrics,
+        )
+
     verdict = verdict_from_score(score, preferred)
-    skip_llm = (source == "forense_local_comparacao" and (score <= 18 or score >= 82)) or (
-        preferred == "MODIFICADO" and score >= 72
+    skip_llm = (
+        score <= 18
+        or score >= 82
+        or (preferred in modified_labels and score >= 60)
+        or (source == "forense_local_comparacao" and score >= 60)
     )
     return ForensicResult(
         score=score,

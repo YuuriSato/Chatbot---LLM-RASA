@@ -6,3 +6,4 @@ pandas
 opencv-python
 scikit-image
 openpyxl
+google-genai

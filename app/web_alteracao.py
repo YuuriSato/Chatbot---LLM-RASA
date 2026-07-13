@@ -12,9 +12,16 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote
+from urllib.parse import parse_qs, unquote, urlparse
 
 import ollama
+
+try:
+    from google import genai
+    from google.genai import types as genai_types
+except ImportError:  # pragma: no cover - Gemini is optional unless LLM_PROVIDER=gemini
+    genai = None
+    genai_types = None
 
 try:
     from local_forensics import (
@@ -23,8 +30,9 @@ try:
         build_calibration_samples,
         compare_with_original,
         comparison_feature_profile,
-        feature_profile,
+        feature_profile_from_metrics,
         file_sha256 as forensic_sha256,
+        local_metrics,
     )
 except ModuleNotFoundError:  # pragma: no cover - supports python -m app.web_alteracao
     from app.local_forensics import (
@@ -33,8 +41,9 @@ except ModuleNotFoundError:  # pragma: no cover - supports python -m app.web_alt
         build_calibration_samples,
         compare_with_original,
         comparison_feature_profile,
-        feature_profile,
+        feature_profile_from_metrics,
         file_sha256 as forensic_sha256,
+        local_metrics,
     )
 
 try:
@@ -47,6 +56,14 @@ except ImportError:  # pragma: no cover - fallback for minimal installs
 PORT = int(os.environ.get("WEB_PORT", "9090"))
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11435")
 MODEL = os.environ.get("VISION_MODEL", "codex-dental:latest")
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "gemini").strip().lower()
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_FALLBACK_MODELS = [
+    model.strip()
+    for model in os.environ.get("GEMINI_FALLBACK_MODELS", "gemini-2.0-flash,gemini-1.5-flash").split(",")
+    if model.strip()
+]
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_DIR = PROJECT_ROOT / "runtime"
 UPLOAD_DIR = RUNTIME_DIR / "uploads"
@@ -54,6 +71,7 @@ ANALYSIS_DIR = RUNTIME_DIR / "analysis_cache"
 HISTORY_FILE = RUNTIME_DIR / "analysis_history.json"
 CALIBRATION_FILE = RUNTIME_DIR / "integrity_calibration.json"
 ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
+HISTORY_PAGE_SIZE = int(os.environ.get("HISTORY_PAGE_SIZE", "8"))
 ANALYSIS_MAX_SIDE = int(os.environ.get("ANALYSIS_MAX_SIDE", "896"))
 TESTS_DIR = PROJECT_ROOT / "tests"
 
@@ -199,7 +217,7 @@ HTML = """<!doctype html>
     }
     .forensics {
       display: none;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 10px;
       border: 1px solid #d9e0e7;
       border-radius: 8px;
@@ -353,6 +371,46 @@ HTML = """<!doctype html>
       background: #1264a3;
       color: #fff;
     }
+    .history-pager {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid #d9e0e7;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+    .history-range,
+    .history-page-label {
+      color: #52606d;
+      font-size: 14px;
+    }
+    .history-page-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .history-page-button {
+      width: 38px;
+      height: 38px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0;
+      background: #fff;
+      color: #1264a3;
+      font-size: 22px;
+      line-height: 1;
+    }
+    .history-page-button:disabled {
+      cursor: not-allowed;
+      color: #94a3b8;
+      background: #f8fafc;
+      opacity: 1;
+    }
     .history-list {
       display: grid;
       gap: 12px;
@@ -432,6 +490,13 @@ HTML = """<!doctype html>
         flex: 1 1 calc(50% - 8px);
         justify-content: center;
       }
+      .history-pager {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .history-page-actions {
+        justify-content: space-between;
+      }
     }
   </style>
 </head>
@@ -455,7 +520,7 @@ HTML = """<!doctype html>
         </div>
         <label class="toggle" for="useLlm">
           <input id="useLlm" name="use_llm" type="checkbox">
-          Usar LLM detalhada (mais lento)
+          Usar LLM detalhada via Gemini
         </label>
         <div class="preview-grid">
           <img id="preview" class="preview" alt="Previa da imagem suspeita">
@@ -488,6 +553,8 @@ HTML = """<!doctype html>
         <div id="forensics" class="forensics">
           <div class="metric"><span>Score local</span><strong id="forensicScore">-</strong></div>
           <div class="metric"><span>Fonte</span><strong id="forensicSource">-</strong></div>
+          <div class="metric"><span>Qualidade da imagem</span><strong id="forensicQuality">-</strong></div>
+          <div class="metric"><span>Auditoria CRAG</span><strong id="forensicAudit">-</strong></div>
           <div class="metric"><span>Evidencias locais</span><strong id="forensicEvidence">-</strong></div>
         </div>
         <pre id="report"></pre>
@@ -504,6 +571,14 @@ HTML = """<!doctype html>
         <button class="history-tab" type="button" data-tab="real">Reais <span class="history-tab-count">0</span></button>
         <button class="history-tab" type="button" data-tab="inconclusive">Inconclusivos <span class="history-tab-count">0</span></button>
         <button class="history-tab" type="button" data-tab="calibration">Calibracao <span class="history-tab-count">0</span></button>
+      </div>
+      <div class="history-pager" aria-label="Paginacao do historico">
+        <div class="history-range" id="historyRange">0 registros</div>
+        <div class="history-page-actions">
+          <button class="history-page-button" id="historyPrev" type="button" aria-label="Pagina anterior">‹</button>
+          <span class="history-page-label" id="historyPageLabel">Pagina 1 / 1</span>
+          <button class="history-page-button" id="historyNext" type="button" aria-label="Proxima pagina">›</button>
+        </div>
       </div>
       <div id="historyList" class="history-list">
         <div class="history-empty">Nenhuma analise armazenada ainda.</div>
@@ -537,16 +612,32 @@ HTML = """<!doctype html>
     const forensics = document.getElementById('forensics');
     const forensicScore = document.getElementById('forensicScore');
     const forensicSource = document.getElementById('forensicSource');
+    const forensicQuality = document.getElementById('forensicQuality');
+    const forensicAudit = document.getElementById('forensicAudit');
     const forensicEvidence = document.getElementById('forensicEvidence');
     const historyTabs = document.getElementById('historyTabs');
     const historyList = document.getElementById('historyList');
     const historyCount = document.getElementById('historyCount');
+    const historyRange = document.getElementById('historyRange');
+    const historyPageLabel = document.getElementById('historyPageLabel');
+    const historyPrev = document.getElementById('historyPrev');
+    const historyNext = document.getElementById('historyNext');
     let progressTimer = null;
     let progressValue = 0;
     let estimatedSeconds = 75;
     let progressStartedAt = 0;
-    let historyItems = [];
     let activeHistoryTab = 'all';
+    let historyPage = 1;
+    let historyMeta = {
+      page: 1,
+      total_pages: 1,
+      total: 0,
+      total_all: 0,
+      page_size: 8,
+      start: 0,
+      end: 0,
+      counts: {}
+    };
 
     function setProgress(value, label) {
       progressValue = Math.max(progressValue, Math.min(value, 100));
@@ -587,7 +678,7 @@ HTML = """<!doctype html>
           next = Math.max(progressValue, 8);
           label = 'Preparando imagem otimizada...';
         } else if (ratio < 0.72) {
-          label = `Pericia local e LLM analisando (${Math.round(elapsedSeconds)}s de ~${Math.round(estimatedSeconds)}s)...`;
+          label = `Pericia local, LLM e auditoria CRAG (${Math.round(elapsedSeconds)}s de ~${Math.round(estimatedSeconds)}s)...`;
         } else if (ratio < 0.96) {
           label = 'Normalizando score, confianca e justificativa...';
         } else {
@@ -622,6 +713,32 @@ HTML = """<!doctype html>
       return 'indeterminado';
     }
 
+    function qualityText(payload) {
+      const metrics = payload.forensic_metrics || {};
+      const status = String(payload.forensic_quality || metrics.quality_status || '').trim();
+      if (!status) return '-';
+      const labels = {
+        boa: 'boa',
+        limitada: 'limitada',
+        insuficiente: 'insuficiente'
+      };
+      const label = labels[status.toLowerCase()] || status;
+      if (status.toLowerCase() === 'insuficiente') {
+        return 'insuficiente - resolucao/nitidez insuficiente para pericia confiavel';
+      }
+      return label;
+    }
+
+    function auditText(payload) {
+      const status = String(payload.audit_status || '').trim();
+      if (!status || status === 'nao_executada') return '-';
+      const evidence = Array.isArray(payload.audit_evidence)
+        ? payload.audit_evidence.filter(Boolean).slice(0, 2).join('; ')
+        : '';
+      if (!evidence) return status;
+      return `${status} - ${evidence}`;
+    }
+
     function isModifiedHistory(item) {
       const verdict = String(item.verdict || '').toUpperCase();
       return verdict.includes('MODIFICADO') || verdict.includes('ALTERADA') || verdict.includes('IA');
@@ -633,26 +750,7 @@ HTML = """<!doctype html>
       return source.includes('calibracao') || source.includes('feedback') || model.includes('calibracao');
     }
 
-    function historyTabCounts(items) {
-      return {
-        all: items.length,
-        modified: items.filter(isModifiedHistory).length,
-        real: items.filter((item) => String(item.verdict || '').toUpperCase() === 'REAL').length,
-        inconclusive: items.filter((item) => String(item.verdict || '').toUpperCase() === 'INDETERMINADO').length,
-        calibration: items.filter(isCalibrationHistory).length
-      };
-    }
-
-    function filteredHistory(items) {
-      if (activeHistoryTab === 'modified') return items.filter(isModifiedHistory);
-      if (activeHistoryTab === 'real') return items.filter((item) => String(item.verdict || '').toUpperCase() === 'REAL');
-      if (activeHistoryTab === 'inconclusive') return items.filter((item) => String(item.verdict || '').toUpperCase() === 'INDETERMINADO');
-      if (activeHistoryTab === 'calibration') return items.filter(isCalibrationHistory);
-      return items;
-    }
-
-    function updateHistoryTabs(items) {
-      const counts = historyTabCounts(items);
+    function updateHistoryTabs(counts) {
       historyTabs.querySelectorAll('.history-tab').forEach((tab) => {
         const tabName = tab.dataset.tab;
         tab.classList.toggle('active', tabName === activeHistoryTab);
@@ -672,18 +770,40 @@ HTML = """<!doctype html>
       return labels[activeHistoryTab] || labels.all;
     }
 
-    function renderHistory(items) {
-      historyItems = items;
-      updateHistoryTabs(items);
-      const visibleItems = filteredHistory(items);
-      historyCount.textContent = `${visibleItems.length} de ${items.length} registro${items.length === 1 ? '' : 's'}`;
-      if (!visibleItems.length) {
+    function updateHistoryPager(meta) {
+      historyMeta = {
+        page: Number(meta.page || 1),
+        total_pages: Math.max(1, Number(meta.total_pages || 1)),
+        total: Number(meta.total || 0),
+        total_all: Number(meta.total_all || 0),
+        page_size: Number(meta.page_size || 8),
+        start: Number(meta.start || 0),
+        end: Number(meta.end || 0),
+        counts: meta.counts || {}
+      };
+
+      const totalLabel = historyMeta.total_all === 1 ? 'registro' : 'registros';
+      const tabTotalLabel = historyMeta.total === 1 ? 'registro nesta aba' : 'registros nesta aba';
+      historyCount.textContent = `${historyMeta.total_all} ${totalLabel}`;
+      historyRange.textContent = historyMeta.total
+        ? `${historyMeta.start}-${historyMeta.end} de ${historyMeta.total} ${tabTotalLabel}`
+        : `0 de ${historyMeta.total} registros nesta aba`;
+      historyPageLabel.textContent = `Pagina ${historyMeta.page} / ${historyMeta.total_pages}`;
+      historyPrev.disabled = historyMeta.page <= 1;
+      historyNext.disabled = historyMeta.page >= historyMeta.total_pages;
+      updateHistoryTabs(historyMeta.counts);
+    }
+
+    function renderHistory(payload) {
+      const items = payload.history || [];
+      updateHistoryPager(payload.pagination || {});
+      if (!items.length) {
         historyList.innerHTML = `<div class="history-empty">${emptyHistoryMessage()}</div>`;
         return;
       }
 
       historyList.innerHTML = '';
-      for (const item of visibleItems) {
+      for (const item of items) {
         const card = document.createElement('article');
         card.className = 'history-item';
 
@@ -713,7 +833,9 @@ HTML = """<!doctype html>
 
         const score = item.forensic_score !== undefined && item.forensic_score !== null ? ` - score ${item.forensic_score}` : '';
         const source = item.source ? ` - ${item.source}` : '';
-        meta.textContent = `${meta.textContent}${score}${source}`;
+        const quality = item.forensic_quality ? ` - qualidade ${item.forensic_quality}` : '';
+        const audit = item.audit_status && item.audit_status !== 'nao_executada' ? ` - auditoria ${item.audit_status}` : '';
+        meta.textContent = `${meta.textContent}${score}${quality}${audit}${source}`;
 
         const itemVerdict = document.createElement('div');
         itemVerdict.className = `history-verdict ${verdictClass(item.verdict)}`;
@@ -733,7 +855,20 @@ HTML = """<!doctype html>
       const tab = event.target.closest('.history-tab');
       if (!tab) return;
       activeHistoryTab = tab.dataset.tab || 'all';
-      renderHistory(historyItems);
+      historyPage = 1;
+      loadHistory();
+    });
+
+    historyPrev.addEventListener('click', () => {
+      if (historyMeta.page <= 1) return;
+      historyPage = historyMeta.page - 1;
+      loadHistory();
+    });
+
+    historyNext.addEventListener('click', () => {
+      if (historyMeta.page >= historyMeta.total_pages) return;
+      historyPage = historyMeta.page + 1;
+      loadHistory();
     });
 
     async function calibrateImage(label) {
@@ -774,12 +909,15 @@ HTML = """<!doctype html>
         report.textContent = payload.report;
         forensicScore.textContent = payload.forensic_score !== undefined ? `${payload.forensic_score}%` : '-';
         forensicSource.textContent = payload.source || '-';
+        forensicQuality.textContent = qualityText(payload);
+        forensicAudit.textContent = auditText(payload);
         forensicEvidence.textContent = (payload.forensic_evidence || []).join('; ') || '-';
         forensics.style.display = 'grid';
         result.style.display = 'block';
         statusBox.textContent = originalInput.files[0]
           ? 'Par salvo. O projeto local vai usar o padrao de diferenca entre suspeita e original nas proximas analises.'
           : 'Exemplo salvo. O projeto local vai usar esse perfil visual para reconhecer padroes parecidos nas proximas analises.';
+        historyPage = 1;
         await loadHistory();
       } catch (error) {
         statusBox.textContent = error.message;
@@ -793,10 +931,14 @@ HTML = """<!doctype html>
 
     async function loadHistory() {
       try {
-        const response = await fetch('/history');
+        const params = new URLSearchParams({
+          tab: activeHistoryTab,
+          page: String(historyPage)
+        });
+        const response = await fetch(`/history?${params.toString()}`);
         if (!response.ok) return;
         const payload = await response.json();
-        renderHistory(payload.history || []);
+        renderHistory(payload);
       } catch (_error) {
         historyList.innerHTML = '<div class="history-empty">Nao foi possivel carregar o historico.</div>';
       }
@@ -855,7 +997,7 @@ HTML = """<!doctype html>
       markModified.disabled = true;
       markAi.disabled = true;
       statusBox.textContent = useLlmInput.checked
-        ? 'Analisando com pericia local e LLM local...'
+        ? 'Analisando com pericia local e Gemini...'
         : 'Analisando em modo rapido local...';
       result.style.display = 'none';
       forensics.style.display = 'none';
@@ -881,6 +1023,8 @@ HTML = """<!doctype html>
         report.textContent = payload.report;
         forensicScore.textContent = payload.forensic_score !== undefined ? `${payload.forensic_score}%` : '-';
         forensicSource.textContent = payload.source || '-';
+        forensicQuality.textContent = qualityText(payload);
+        forensicAudit.textContent = auditText(payload);
         forensicEvidence.textContent = (payload.forensic_evidence || []).join('; ') || '-';
         forensics.style.display = 'grid';
         result.style.display = 'block';
@@ -888,6 +1032,7 @@ HTML = """<!doctype html>
         statusBox.textContent = payload.duration_seconds
           ? `Analise concluida em ${payload.duration_seconds}s.`
           : 'Analise concluida.';
+        historyPage = 1;
         await loadHistory();
       } catch (error) {
         clearInterval(progressTimer);
@@ -1022,6 +1167,161 @@ def get_field(report: str, field: str) -> str:
     return match.group(1).strip() if match else ""
 
 
+def confidence_label_from_percent(value: object) -> str:
+    match = re.search(r"\d{1,3}", str(value or ""))
+    if not match:
+        return "media"
+    percent = max(0, min(int(match.group(0)), 100))
+    if percent >= 80:
+        return "alta"
+    if percent >= 55:
+        return "media"
+    return "baixa"
+
+
+def score_default_for_verdict(verdict: str) -> int:
+    verdict = canonical_integrity_label(verdict)
+    if verdict == "REAL":
+        return 15
+    if verdict == "INDETERMINADO":
+        return 50
+    if verdict == "MODIFICADO":
+        return 80
+    return 88
+
+
+def extract_json_object(text: object) -> dict[str, Any] | None:
+    value = str(text or "").strip()
+    value = re.sub(r"^```(?:json)?\s*", "", value, flags=re.I).strip()
+    value = re.sub(r"\s*```$", "", value).strip()
+    candidates = [value]
+    match = re.search(r"\{.*\}", value, flags=re.DOTALL)
+    if match:
+        candidates.append(match.group(0))
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+    return None
+
+
+def report_from_gemini_json(parsed: dict[str, Any]) -> str:
+    verdict_value = parsed.get("veredito_revisado", parsed.get("veredito", "INDETERMINADO"))
+    verdict = canonical_integrity_label(str(verdict_value))
+    score_value = parsed.get("score_alteracao")
+    try:
+        score = max(0, min(int(str(score_value).replace("%", "").strip()), 100))
+    except (TypeError, ValueError):
+        score = score_default_for_verdict(verdict)
+    invalidar_laudo = str(parsed.get("invalidar_laudo", "false")).strip().lower() in {
+        "1",
+        "true",
+        "sim",
+        "yes",
+    }
+    quality_value = str(parsed.get("qualidade_imagem", "")).strip().lower()
+    if invalidar_laudo and verdict == "REAL":
+        verdict = "MODIFICADO"
+        score = max(score, 80)
+    if quality_value == "insuficiente" and verdict == "REAL":
+        verdict = "INDETERMINADO"
+        score = max(score, 50)
+    confidence = confidence_label_from_percent(parsed.get("confianca"))
+    evidence_value = parsed.get("evidencias_visuais", [])
+    if isinstance(evidence_value, list):
+        evidences = "; ".join(str(item).strip() for item in evidence_value if str(item).strip())
+    else:
+        evidences = str(evidence_value or "").strip()
+    scale = parsed.get("analise_escala", {})
+    if isinstance(scale, dict):
+        scale_notes = "; ".join(
+            f"{key}: {value}" for key, value in scale.items() if str(value).strip()
+        )
+    else:
+        scale_notes = str(scale or "").strip()
+    if scale_notes:
+        evidences = f"{evidences}; analise visual multiescala: {scale_notes}" if evidences else scale_notes
+    artifacts = parsed.get("artefatos_ia", [])
+    if isinstance(artifacts, list):
+        artifact_notes = "; ".join(str(item).strip() for item in artifacts if str(item).strip())
+    else:
+        artifact_notes = str(artifacts or "").strip()
+    if artifact_notes:
+        evidences = f"{evidences}; artefatos IA avaliados: {artifact_notes}" if evidences else artifact_notes
+    audit_note = str(parsed.get("auditoria_clinica", "")).strip()
+    if audit_note:
+        evidences = f"{evidences}; auditoria clinica: {audit_note}" if evidences else f"auditoria clinica: {audit_note}"
+    conflicts = parsed.get("conflitos_forenses", [])
+    if isinstance(conflicts, list):
+        conflict_notes = "; ".join(str(item).strip() for item in conflicts if str(item).strip())
+    else:
+        conflict_notes = str(conflicts or "").strip()
+    if conflict_notes:
+        evidences = f"{evidences}; conflitos forenses: {conflict_notes}" if evidences else f"conflitos forenses: {conflict_notes}"
+    revision_note = str(parsed.get("motivo_revisao", "")).strip()
+    if revision_note:
+        evidences = f"{evidences}; motivo da revisao: {revision_note}" if evidences else f"motivo da revisao: {revision_note}"
+    if quality_value:
+        evidences = f"{evidences}; qualidade da imagem: {quality_value}" if evidences else f"qualidade da imagem: {quality_value}"
+    if invalidar_laudo:
+        evidences = f"{evidences}; integridade primeiro: laudo clinico invalidado pela analise de integridade"
+    if not evidences:
+        evidences = "sem evidencias adicionais informadas"
+
+    if verdict == "REAL":
+        justification = "A analise combinada nao encontrou sinais fortes de manipulacao visual."
+    elif verdict == "MODIFICADO":
+        justification = "A analise combinada encontrou sinais visuais compativeis com modificacao."
+    elif verdict == "IA_GERADA_EDITADA":
+        justification = "A analise combinada encontrou sinais visuais compativeis com edicao ou geracao por IA."
+    else:
+        justification = "A imagem apresenta evidencias visuais insuficientes ou conflitantes."
+
+    disclaimer = str(parsed.get("disclaimer_itu", "")).strip()
+    if disclaimer:
+        evidences = f"{evidences}; {disclaimer}"
+
+    return "\n".join(
+        [
+            f"VEREDITO: {verdict}",
+            f"CONFIANCA: {confidence}",
+            f"JUSTIFICATIVA: {justification}",
+            f"TIPO: {verdict if verdict != 'IA_GERADA_EDITADA' else 'IA'}",
+            f"SCORE_ALTERACAO: {score}",
+            f"EVIDENCIAS: {evidences}",
+        ]
+    )
+
+
+def normalize_llm_response(text: object) -> str:
+    parsed = extract_json_object(text)
+    if parsed is not None:
+        return report_from_gemini_json(parsed)
+    return clean_model_response(text)
+
+
+def report_with_extra_evidence(report: str, extra: str) -> dict[str, str]:
+    normalized = normalize_report(report)
+    if not extra.strip():
+        return normalized
+    lines = normalized["report"].splitlines()
+    updated_lines: list[str] = []
+    added = False
+    for line in lines:
+        if line.upper().startswith("EVIDENCIAS:"):
+            updated_lines.append(f"{line}; {extra}")
+            added = True
+        else:
+            updated_lines.append(line)
+    if not added:
+        updated_lines.append(f"EVIDENCIAS: {extra}")
+    final_report = "\n".join(updated_lines)
+    return {"verdict": normalize_report(final_report)["verdict"], "report": final_report}
+
+
 def normalize_report(report: str) -> dict[str, str]:
     score = infer_score(report)
     verdict = verdict_from_score(score, infer_verdict(report))
@@ -1059,12 +1359,16 @@ def normalize_report(report: str) -> dict[str, str]:
 def report_from_forensics(forensic: ForensicResult) -> dict[str, str]:
     verdict = canonical_integrity_label(forensic.verdict_hint)
     evidence = "; ".join(forensic.evidence[:5]) or "sem evidencias locais fortes"
+    quality_status = str(forensic.metrics.get("quality_status", ""))
+    quality_insufficient = verdict == "INDETERMINADO" and quality_status == "insuficiente"
     if forensic.calibration_entry:
         justification = str(forensic.calibration_entry.get("justification", "")).strip()
     else:
         justification = ""
     if not justification:
-        if verdict == "REAL":
+        if quality_insufficient:
+            justification = "Imagem com resolucao/nitidez insuficiente para pericia visual confiavel."
+        elif verdict == "REAL":
             justification = "A imagem apresenta baixa pontuacao local de alteracao e sinais visuais coerentes."
         elif verdict == "IA_GERADA_EDITADA":
             justification = "A imagem apresenta sinais locais fortes compativeis com edicao ou geracao por IA."
@@ -1081,7 +1385,7 @@ def report_from_forensics(forensic: ForensicResult) -> dict[str, str]:
             f"VEREDITO: {verdict}",
             f"CONFIANCA: {forensic.confidence}",
             f"JUSTIFICATIVA: {justification}",
-            f"TIPO: {verdict if verdict != 'IA_GERADA_EDITADA' else 'IA'}",
+            f"TIPO: {'QUALIDADE_INSUFICIENTE' if quality_insufficient else verdict if verdict != 'IA_GERADA_EDITADA' else 'IA'}",
             f"SCORE_ALTERACAO: {forensic.score}",
             f"EVIDENCIAS: {evidence}",
         ]
@@ -1089,10 +1393,87 @@ def report_from_forensics(forensic: ForensicResult) -> dict[str, str]:
     return {"verdict": verdict, "report": report}
 
 
+def has_local_inconsistency(forensic: ForensicResult) -> bool:
+    metrics = forensic.metrics
+    return any(
+        [
+            float(metrics.get("ela_block_cv", 0) or 0) >= 0.35 and float(metrics.get("ela_p95", 0) or 0) >= 5,
+            float(metrics.get("noise_block_cv", 0) or 0) >= 0.60,
+            float(metrics.get("sharpness_block_cv", 0) or 0) >= 0.75,
+            bool(metrics.get("comparison")),
+            bool(metrics.get("nearest_pattern")),
+            bool(metrics.get("nearest_pair_pattern")),
+        ]
+    )
+
+
+def should_run_clinical_audit(initial_report: str, forensic: ForensicResult) -> bool:
+    if str(forensic.metrics.get("quality_status", "")) == "insuficiente":
+        return False
+    initial = normalize_report(initial_report)
+    initial_verdict = canonical_integrity_label(initial["verdict"])
+    modified_labels = {"MODIFICADO", "ALTERADA_MANUALMENTE", "ALTERADA_DIGITALMENTE", "IA_GERADA_EDITADA"}
+    if initial_verdict in modified_labels:
+        return True
+    if initial_verdict == "REAL":
+        return (
+            forensic.score >= 30
+            or str(forensic.metrics.get("quality_status", "")) == "limitada"
+            or has_local_inconsistency(forensic)
+        )
+    return forensic.score >= 30 or has_local_inconsistency(forensic)
+
+
+def parsed_audit_conflict(raw_response: object) -> bool:
+    parsed = extract_json_object(raw_response)
+    if not parsed:
+        return False
+    if str(parsed.get("invalidar_laudo", "false")).strip().lower() in {"1", "true", "sim", "yes"}:
+        return True
+    conflicts = parsed.get("conflitos_forenses", [])
+    if isinstance(conflicts, list):
+        text = " ".join(str(item).lower() for item in conflicts)
+    else:
+        text = str(conflicts or "").lower()
+    if not text.strip():
+        return False
+    benign_markers = {"sem conflito", "nenhum conflito", "nao ha conflito", "sem divergencia"}
+    return not any(marker in text for marker in benign_markers)
+
+
+def audit_evidence_from_response(raw_response: object, audit_report: str = "") -> list[str]:
+    parsed = extract_json_object(raw_response)
+    evidence: list[str] = []
+    if isinstance(parsed, dict):
+        for key in ("auditoria_clinica", "motivo_revisao"):
+            value = str(parsed.get(key, "")).strip()
+            if value:
+                evidence.append(value)
+        conflicts = parsed.get("conflitos_forenses", [])
+        if isinstance(conflicts, list):
+            evidence.extend(str(item).strip() for item in conflicts if str(item).strip())
+        elif str(conflicts or "").strip():
+            evidence.append(str(conflicts).strip())
+    if not evidence:
+        report_evidence = get_field(audit_report, "EVIDENCIAS")
+        if report_evidence:
+            evidence.append(report_evidence)
+    return evidence[:5]
+
+
 def merge_llm_and_forensics(llm_report: str, forensic: ForensicResult) -> dict[str, str]:
     llm_normalized = normalize_report(llm_report)
     llm_score = infer_score(llm_normalized["report"])
     local_score = forensic.score
+    local_preferred = canonical_integrity_label(forensic.verdict_hint)
+    modified_labels = {"MODIFICADO", "ALTERADA_MANUALMENTE", "ALTERADA_DIGITALMENTE", "IA_GERADA_EDITADA"}
+    quality_status = str(forensic.metrics.get("quality_status", ""))
+
+    if quality_status == "insuficiente" and local_preferred not in modified_labels and local_score < 60:
+        return report_from_forensics(forensic)
+
+    if local_score <= 18 or local_score >= 82 or (local_preferred in modified_labels and local_score >= 60):
+        return report_from_forensics(forensic)
 
     if llm_score is None:
         final_score = local_score
@@ -1104,7 +1485,6 @@ def merge_llm_and_forensics(llm_report: str, forensic: ForensicResult) -> dict[s
     else:
         final_score = round((local_score * 0.55) + (llm_score * 0.45))
 
-    local_preferred = forensic.verdict_hint
     llm_preferred = infer_verdict(llm_normalized["report"])
     preferred = local_preferred if local_score >= 60 or local_score <= 29 else llm_preferred
     verdict = verdict_from_score(final_score, preferred)
@@ -1133,6 +1513,73 @@ def merge_llm_and_forensics(llm_report: str, forensic: ForensicResult) -> dict[s
     return {"verdict": verdict, "report": report}
 
 
+def integrity_report(verdict: str, score: int, confidence: str, justification: str, evidence: str) -> dict[str, str]:
+    verdict = canonical_integrity_label(verdict)
+    report = "\n".join(
+        [
+            f"VEREDITO: {verdict}",
+            f"CONFIANCA: {confidence}",
+            f"JUSTIFICATIVA: {justification}",
+            f"TIPO: {verdict if verdict != 'IA_GERADA_EDITADA' else 'IA'}",
+            f"SCORE_ALTERACAO: {max(0, min(int(score), 100))}",
+            f"EVIDENCIAS: {evidence}",
+        ]
+    )
+    return normalize_report(report)
+
+
+def merge_audit_and_forensics(
+    initial_report: str,
+    audit_result: dict[str, Any],
+    forensic: ForensicResult,
+) -> dict[str, str]:
+    status = str(audit_result.get("audit_status") or "nao_executada")
+    if status == "executada" and audit_result.get("audit_report"):
+        audit_report = str(audit_result["audit_report"])
+        merged = merge_llm_and_forensics(audit_report, forensic)
+        audit_normalized = normalize_report(audit_report)
+        audit_verdict = canonical_integrity_label(audit_normalized["verdict"])
+        audit_score = infer_score(audit_normalized["report"]) or forensic.score
+        audit_evidence = "; ".join(audit_result.get("audit_evidence") or [])
+
+        if audit_verdict == "IA_GERADA_EDITADA" and forensic.score >= 50:
+            return integrity_report(
+                "IA_GERADA_EDITADA",
+                max(80, audit_score, forensic.score),
+                confidence_from_score(max(80, audit_score, forensic.score), "IA_GERADA_EDITADA"),
+                "A auditoria CRAG confirmou sinais compativeis com edicao ou geracao por IA apoiados pela pericia local.",
+                f"{audit_evidence or get_field(audit_normalized['report'], 'EVIDENCIAS')}; Auditoria CRAG: veredito elevado para IA_GERADA_EDITADA",
+            )
+
+        if audit_result.get("audit_conflict") and merged["verdict"] in {"REAL", "INDETERMINADO"}:
+            if max(audit_score, forensic.score) >= 60:
+                return integrity_report(
+                    "MODIFICADO",
+                    max(60, audit_score, forensic.score),
+                    "media",
+                    "A auditoria CRAG encontrou conflito entre achado visual e sinais forenses locais.",
+                    f"{audit_evidence or 'conflito forense detectado'}; Auditoria CRAG: conflito impediu veredito REAL",
+                )
+            return integrity_report(
+                "INDETERMINADO",
+                max(50, audit_score, forensic.score),
+                "baixa",
+                "A auditoria CRAG encontrou conflito insuficiente para confirmar integridade ou modificacao.",
+                f"{audit_evidence or 'conflito forense detectado'}; Auditoria CRAG: veredito REAL bloqueado",
+            )
+
+        extra = f"Auditoria CRAG: {status}"
+        if audit_evidence:
+            extra = f"{extra}; {audit_evidence}"
+        return report_with_extra_evidence(merged["report"], extra)
+
+    merged = merge_llm_and_forensics(initial_report, forensic)
+    if status == "falhou":
+        evidence = "; ".join(audit_result.get("audit_evidence") or ["auditoria CRAG falhou"])
+        return report_with_extra_evidence(merged["report"], f"Auditoria CRAG: falhou; {evidence}")
+    return merged
+
+
 def normalize_history_item(item: dict[str, Any]) -> dict[str, Any]:
     cleaned = dict(item)
     report = str(cleaned.get("report") or "").strip()
@@ -1149,6 +1596,14 @@ def normalize_history_item(item: dict[str, Any]) -> dict[str, Any]:
     if cleaned.get("forensic_evidence") is None:
         evidence = get_field(normalized["report"], "EVIDENCIAS")
         cleaned["forensic_evidence"] = [evidence] if evidence else []
+    if cleaned.get("forensic_quality") is None:
+        metrics = cleaned.get("forensic_metrics")
+        if isinstance(metrics, dict):
+            cleaned["forensic_quality"] = metrics.get("quality_status")
+    if cleaned.get("audit_status") is None:
+        cleaned["audit_status"] = "nao_executada"
+    if cleaned.get("audit_evidence") is None:
+        cleaned["audit_evidence"] = []
     return cleaned
 
 
@@ -1164,6 +1619,68 @@ def load_history() -> list[dict[str, Any]]:
     return [normalize_history_item(item) for item in data if isinstance(item, dict)]
 
 
+def history_is_modified(item: dict[str, Any]) -> bool:
+    verdict = str(item.get("verdict") or "").upper()
+    return any(token in verdict for token in ("MODIFICADO", "ALTERADA", "IA"))
+
+
+def history_is_calibration(item: dict[str, Any]) -> bool:
+    source = str(item.get("source") or "").lower()
+    model = str(item.get("model") or "").lower()
+    return "calibracao" in source or "feedback" in source or "calibracao" in model
+
+
+def history_matches_tab(item: dict[str, Any], tab: str) -> bool:
+    verdict = str(item.get("verdict") or "").upper()
+    if tab == "modified":
+        return history_is_modified(item)
+    if tab == "real":
+        return verdict == "REAL"
+    if tab == "inconclusive":
+        return verdict == "INDETERMINADO"
+    if tab == "calibration":
+        return history_is_calibration(item)
+    return True
+
+
+def history_tab_counts(history: list[dict[str, Any]]) -> dict[str, int]:
+    return {
+        "all": len(history),
+        "modified": sum(1 for item in history if history_is_modified(item)),
+        "real": sum(1 for item in history if str(item.get("verdict") or "").upper() == "REAL"),
+        "inconclusive": sum(1 for item in history if str(item.get("verdict") or "").upper() == "INDETERMINADO"),
+        "calibration": sum(1 for item in history if history_is_calibration(item)),
+    }
+
+
+def paginated_history(tab: str, page: int, page_size: int = HISTORY_PAGE_SIZE) -> dict[str, Any]:
+    valid_tabs = {"all", "modified", "real", "inconclusive", "calibration"}
+    tab = tab if tab in valid_tabs else "all"
+    history = load_history()
+    counts = history_tab_counts(history)
+    filtered = [item for item in history if history_matches_tab(item, tab)]
+    total = len(filtered)
+    page_size = max(1, min(int(page_size), 50))
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page = max(1, min(int(page), total_pages))
+    start_index = (page - 1) * page_size
+    end_index = min(start_index + page_size, total)
+    return {
+        "history": filtered[start_index:end_index],
+        "pagination": {
+            "tab": tab,
+            "page": page,
+            "page_size": page_size,
+            "total": total,
+            "total_all": len(history),
+            "total_pages": total_pages,
+            "start": start_index + 1 if total else 0,
+            "end": end_index,
+            "counts": counts,
+        },
+    }
+
+
 def file_sha256(path: Path) -> str:
     return forensic_sha256(path)
 
@@ -1176,6 +1693,75 @@ def load_calibration() -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def calibration_rag_examples(limit: int = 3) -> str:
+    calibration = load_calibration()
+    if not calibration:
+        return "Nenhum exemplo previo disponivel."
+    examples: list[dict[str, Any]] = []
+    for sha256, entry in list(calibration.items())[-limit:]:
+        if not isinstance(entry, dict):
+            continue
+        compact = {
+            "sha256_prefix": str(sha256)[:12],
+            "label": entry.get("label"),
+            "score": entry.get("score"),
+            "evidence": entry.get("evidence"),
+            "justification": entry.get("justification"),
+            "stored_filename": entry.get("stored_filename"),
+        }
+        if isinstance(entry.get("comparison"), dict):
+            comparison = entry["comparison"]
+            compact["comparison"] = {
+                "same_scene": comparison.get("same_scene"),
+                "central_mean_diff": comparison.get("central_mean_diff"),
+                "central_high_diff_ratio": comparison.get("central_high_diff_ratio"),
+            }
+        examples.append(compact)
+    return json.dumps(examples or "Nenhum exemplo previo disponivel.", ensure_ascii=False)
+
+
+def compact_forensic_payload(forensic: ForensicResult) -> str:
+    metric_keys = [
+        "ela_mean",
+        "ela_p95",
+        "ela_block_cv",
+        "image_width",
+        "image_height",
+        "image_megapixels",
+        "image_min_side",
+        "quality_status",
+        "quality_reasons",
+        "blur_level",
+        "laplacian_var",
+        "sharpness_block_cv",
+        "noise_mean",
+        "noise_block_cv",
+        "saturated_overlay_ratio",
+        "marker_overlay_ratio",
+        "green_marker_ratio",
+        "red_marker_ratio",
+        "blue_marker_ratio",
+        "overlay_regions",
+        "nearest_calibration_distance",
+        "comparison",
+        "nearest_pattern",
+        "nearest_pair_pattern",
+    ]
+    payload = {
+        "score_local": forensic.score,
+        "veredito_local": forensic.verdict_hint,
+        "fonte_local": forensic.source,
+        "original_usada": forensic.original_used,
+        "evidencias_locais": forensic.evidence,
+        "metricas": {
+            key: forensic.metrics.get(key)
+            for key in metric_keys
+            if key in forensic.metrics
+        },
+    }
+    return json.dumps(payload, ensure_ascii=False)
 
 
 def save_calibration(calibration: dict[str, Any]) -> None:
@@ -1324,6 +1910,204 @@ def prepare_analysis_image(image_path: Path) -> Path:
     return optimized_path
 
 
+def call_gemini_flash(prompt: str, image_path: Path, max_output_tokens: int = 256) -> tuple[str, str]:
+    if genai is None or genai_types is None:
+        raise RuntimeError("Dependencia google-genai ausente. Rode: python -m pip install -r requirements.txt")
+    if Image is None:
+        raise RuntimeError("Dependencia Pillow ausente para abrir a imagem enviada ao Gemini.")
+    if not GEMINI_API_KEY:
+        raise RuntimeError("Defina a variavel de ambiente GEMINI_API_KEY antes de usar a LLM detalhada.")
+
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    candidate_models = [GEMINI_MODEL] + [
+        model for model in GEMINI_FALLBACK_MODELS if model != GEMINI_MODEL
+    ]
+    last_error: Exception | None = None
+    with Image.open(image_path) as image:
+        image = ImageOps.exif_transpose(image).convert("RGB") if ImageOps is not None else image.convert("RGB")
+        for model_name in candidate_models:
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=[prompt, image],
+                    config=genai_types.GenerateContentConfig(
+                        temperature=0.1,
+                        max_output_tokens=max_output_tokens,
+                    ),
+                )
+                return str(getattr(response, "text", "") or "").strip(), model_name
+            except Exception as exc:
+                last_error = exc
+                if "NOT_FOUND" not in str(exc) and "404" not in str(exc):
+                    break
+    raise RuntimeError(f"Falha ao chamar Gemini: {last_error}")
+
+
+def call_ollama_llm(prompt: str, image_path: Path) -> str:
+    client = ollama.Client(host=OLLAMA_HOST)
+    response = client.generate(
+        model=MODEL,
+        prompt=prompt,
+        images=[str(image_path)],
+        options=MODEL_OPTIONS,
+        keep_alive=KEEP_ALIVE,
+    )
+    return str(response["response"])
+
+
+def call_detailed_llm(prompt: str, image_path: Path) -> tuple[str, str, str]:
+    provider = LLM_PROVIDER or "gemini"
+    if provider == "ollama":
+        return call_ollama_llm(prompt, image_path), "hibrido_local_ollama", MODEL
+    if provider not in {"gemini", "google", "gemini_flash"}:
+        raise RuntimeError("LLM_PROVIDER invalido. Use gemini ou ollama.")
+    response_text, model_name = call_gemini_flash(prompt, image_path)
+    return response_text, "hibrido_local_gemini", model_name
+
+
+def build_advanced_codex_prompt(forensic: ForensicResult) -> str:
+    local_forensics_data = compact_forensic_payload(forensic)
+    exemplos_rag = calibration_rag_examples(limit=3)
+    return f"""
+VOCE E O PERITO VISUAL SENIOR DO MODULO CODEX.
+
+IMPORTANTE:
+- Nao emita diagnostico odontologico.
+- Descreva apenas achados visuais de integridade, alteracao e compatibilidade aparente.
+- Integridade vem antes de qualquer leitura clinica: se a imagem for fraudada, modificada ou tiver qualidade insuficiente, invalide qualquer conclusao clinica.
+- A decisao final e suporte tecnico; a responsabilidade clinica e do cirurgiao-dentista.
+
+DADOS DA PERICIA LOCAL (ELA, dHash, ruido, comparacao e marcadores):
+{local_forensics_data}
+
+EXEMPLOS CALIBRADOS DO PROJETO LOCAL (RAG / verdade operacional):
+{exemplos_rag}
+
+SUA TAREFA:
+1. ANALISE DE INTEGRIDADE FORENSE:
+   - Classifique como REAL, MODIFICADO, IA_GERADA_EDITADA ou INDETERMINADO.
+   - Procure setas, linhas, esbocos, textos, recortes, halos, borroes, colagem e sinais de IA.
+   - Em fotos intraorais, procure dentes fundidos, textura gengival artificial, esmalte plastificado e contornos nao biologicos.
+   - Em raios-X, procure raizes/dentes fundidos, densidade radiografica incoerente, bordas artificiais e regioes radiopacas/radiolucidas com transicao incompativel.
+   - Busque texturas nao biologicas: ruido uniforme demais, gengiva artificial, esmalte/raiz com padrao plastificado ou anatomia sem separacao coerente.
+   - Se houver marca grafica, seta, linha verde, texto, borrão ou recorte sobreposto, o veredito deve invalidar a imagem como MODIFICADO.
+
+2. ANALISE MOQAM / Escaneamento por Receptividade, SEM DIAGNOSTICO:
+   - Execute duas passagens independentes antes do veredito: Micro-Escala e Macro-Escala.
+   - Micro-Escala: procure inconsistencias de pixel em pequenas regioes, areas de desmineralizacao aparente, bordas artificiais, textura reconstruida e sinais sutis em regioes de carie/lesao apenas como achado visual, sem diagnostico.
+   - Macro-Escala: verifique continuidade biologica da mandibula, arcada, proteses, implantes, raizes e separacao entre dentes.
+   - Procure dentes fundidos, raizes fundidas e transicoes anatomicas sem coerencia biologica, especialmente em imagens suspeitas de IA generativa.
+   - Implantes/metais nao devem mascarar pequenas edicoes por IA; se uma estrutura brilhante dominar a imagem, ignore-a temporariamente e reavalie as regioes vizinhas.
+   - Se a macro-escala parecer coerente, mas a micro-escala mostrar alteracao localizada forte, o veredito nao pode ser REAL.
+
+3. DETECCAO DE TIPO:
+   - Se for fotografia intraoral, avalie reflexos, textura de dentes/gengiva, restauracoes e coroas aparentes.
+   - Se for raio-X panoramico/periapical, avalie padrao de arcada, estruturas radiopacas, implantes/proteses aparentes e coerencia visual.
+
+FORMATO DE RESPOSTA OBRIGATORIO:
+Responda SOMENTE JSON valido, sem markdown, sem pensamento interno:
+{{
+  "veredito": "REAL | MODIFICADO | IA_GERADA_EDITADA | INDETERMINADO",
+  "confianca": "0-100%",
+  "score_alteracao": 0,
+  "qualidade_imagem": "boa | limitada | insuficiente",
+  "artefatos_ia": ["texturas nao biologicas, dentes/raizes fundidos, densidade incoerente, se houver"],
+  "integridade_primeiro": true,
+  "invalidar_laudo": false,
+  "analise_escala": {{
+    "micro_escala": "achados pequenos de pixel/textura/borda, sem diagnostico",
+    "macro_escala": "continuidade biologica ampla de arcada/mandibula/proteses/implantes/raizes",
+    "conflito_escala": "se micro e macro divergem, explique a divergencia e se ela invalida REAL"
+  }},
+  "evidencias_visuais": ["ate 4 evidencias objetivas"],
+  "disclaimer_itu": "Suporte a decisao. Responsabilidade do cirurgiao-dentista."
+}}
+""".strip()
+
+
+def truncate_for_prompt(value: object, limit: int = 1800) -> str:
+    text = str(value or "").strip()
+    if len(text) <= limit:
+        return text
+    return text[:limit] + "\n...[truncado]"
+
+
+def build_clinical_audit_prompt(
+    forensic: ForensicResult,
+    initial_report: str,
+    initial_raw_response: str,
+) -> str:
+    local_forensics_data = compact_forensic_payload(forensic)
+    return f"""
+VOCE E O NO DE AUDITORIA CLINICA CRAG DO MODULO CODEX.
+
+OBJETIVO:
+- Reavaliar o laudo inicial cruzando achados visuais com a pericia local.
+- Nao emita diagnostico odontologico. Trate carie/lesao/desmineralizacao apenas como achado visual aparente e possivel regiao de auditoria.
+- Integridade vem primeiro: se achado clinico aparente conflitar com ELA, ruido, nitidez, pixel, qualidade ou MOQAM, nao permita veredito REAL.
+
+DADOS FORENSES LOCAIS:
+{local_forensics_data}
+
+LAUDO INICIAL NORMALIZADO:
+{truncate_for_prompt(initial_report, 1400)}
+
+RESPOSTA BRUTA INICIAL DA LLM:
+{truncate_for_prompt(initial_raw_response, 1600)}
+
+TAREFA DE AUDITORIA:
+1. Verifique se achados como carie/lesao aparente, dentes fundidos, densidade incoerente ou textura suspeita sao sustentados pela imagem e pelas metricas locais.
+2. Se a LLM chamou algo de achado clinico, mas ELA/ruido/nitidez indicam artefato naquela regiao, trate como conflito forense.
+3. Se a primeira resposta indicou MODIFICADO/IA, confirme se a conclusao tem suporte em ELA, ruido, bordas, pixels, MOQAM ou comparacao com original.
+4. Se houver conflito entre micro-escala e macro-escala, priorize a integridade e revise o veredito.
+
+FORMATO DE RESPOSTA OBRIGATORIO:
+Responda SOMENTE JSON valido, sem markdown, sem pensamento interno:
+{{
+  "veredito": "REAL | MODIFICADO | IA_GERADA_EDITADA | INDETERMINADO",
+  "veredito_revisado": "REAL | MODIFICADO | IA_GERADA_EDITADA | INDETERMINADO",
+  "confianca": "0-100%",
+  "score_alteracao": 0,
+  "auditoria_clinica": "confirmada | revisada | conflito | inconclusiva",
+  "conflitos_forenses": ["conflitos entre achado visual e ELA/ruido/nitidez/pixel/MOQAM, se houver"],
+  "motivo_revisao": "explique por que manteve ou revisou o laudo inicial",
+  "evidencias_visuais": ["ate 4 evidencias objetivas da auditoria"],
+  "invalidar_laudo": false,
+  "disclaimer_itu": "Suporte a decisao. Responsabilidade do cirurgiao-dentista."
+}}
+""".strip()
+
+
+def run_clinical_audit(
+    forensic: ForensicResult,
+    initial_report: str,
+    initial_raw_response: str,
+    image_path: Path,
+) -> dict[str, Any]:
+    if LLM_PROVIDER not in {"gemini", "google", "gemini_flash", ""}:
+        return {"audit_status": "nao_executada", "audit_evidence": []}
+    if not should_run_clinical_audit(initial_report, forensic):
+        return {"audit_status": "nao_executada", "audit_evidence": []}
+    prompt = build_clinical_audit_prompt(forensic, initial_report, initial_raw_response)
+    try:
+        raw_response, model_name = call_gemini_flash(prompt, image_path, max_output_tokens=320)
+        audit_report = normalize_llm_response(raw_response)
+        return {
+            "audit_status": "executada",
+            "audit_model": model_name,
+            "llm_audit_response": raw_response,
+            "audit_report": audit_report,
+            "audit_conflict": parsed_audit_conflict(raw_response),
+            "audit_evidence": audit_evidence_from_response(raw_response, audit_report),
+        }
+    except Exception as exc:
+        return {
+            "audit_status": "falhou",
+            "audit_error": str(exc),
+            "audit_evidence": [f"auditoria CRAG falhou: {exc}"],
+        }
+
+
 def analyze_image(image_path: Path, original_path: Path | None = None, use_llm: bool = False) -> dict[str, Any]:
     total_started = time.perf_counter()
     forensic = analyze_forensics(
@@ -1341,70 +2125,31 @@ def analyze_image(image_path: Path, original_path: Path | None = None, use_llm: 
             "source": forensic.source if forensic.skip_llm else "modo_rapido_local",
             "forensic_score": forensic.score,
             "forensic_evidence": forensic.evidence,
+            "forensic_quality": forensic.metrics.get("quality_status"),
             "forensic_metrics": forensic.metrics,
         }
 
-    local_summary = "\n".join(
-        [
-            f"SCORE_LOCAL: {forensic.score}",
-            f"VEREDITO_LOCAL: {forensic.verdict_hint}",
-            f"FONTE_LOCAL: {forensic.source}",
-            f"ORIGINAL_USADA: {'SIM' if forensic.original_used else 'NAO'}",
-            f"EVIDENCIAS_LOCAIS: {'; '.join(forensic.evidence)}",
-        ]
-    )
+    prompt = build_advanced_codex_prompt(forensic)
 
-    prompt = """
-Atue como perito visual forense odontologico. Antes de qualquer diagnostico, classifique a integridade da imagem.
-
-Resumo da pericia local ja calculada:
-{local_summary}
-
-Use o resumo local como evidencia objetiva. Se discordar dele, aponte uma evidencia visual concreta.
-
-Use esta hierarquia de rotulos:
-REAL: anatomia coerente, reflexos compativeis e ausencia de bordas artificiais.
-MODIFICADO: esbocos, marcacoes, linhas, setas, textos, rabiscos, borroes, recortes, colagens, clonagem, halos, bordas artificiais ou edicao de software.
-IA_GERADA_EDITADA: dentes fundidos, dentes artificialmente lisos/reconstruidos, texturas gengivais artificiais, padroes nao biologicos, objetos derretidos ou geometria impossivel.
-INDETERMINADO: imagem ruim ou evidencias conflitantes/insuficientes.
-
-Cheque evidencias objetivas: anatomia, textura, reflexos, sombras, nitidez, compressao, bordas, repeticoes, instrumentos e perspectiva.
-Atencao especial em fotos intraorais: dentes naturais costumam ter manchas, translucidez, desgaste e sulcos irregulares. Dentes substituidos por IA costumam ficar excessivamente limpos, uniformes, plastificados ou com sulcos/contornos reconstruidos.
-
-Pontue SCORE_ALTERACAO de 0 a 100:
-0-29 = sem sinais relevantes; use VEREDITO REAL.
-30-69 = sinais fracos/conflitantes; use VEREDITO INDETERMINADO.
-70-100 = sinais fortes; use MODIFICADO ou IA_GERADA_EDITADA.
-
-Nao use INDETERMINADO por cautela generica; so use quando houver sinais suspeitos insuficientes ou imagem ruim.
-Nao escreva pensamento interno.
-Responda exatamente:
-VEREDITO: REAL, MODIFICADO, IA_GERADA_EDITADA ou INDETERMINADO
-CONFIANCA: baixa, media ou alta
-JUSTIFICATIVA: conclusao tecnica em uma frase, por exemplo "A imagem parece ser uma foto real de uma dentadura."
-TIPO: REAL, MODIFICADO, IA ou INDETERMINADO
-SCORE_ALTERACAO: numero de 0 a 100
-EVIDENCIAS: ate 3 evidencias curtas separadas por ponto e virgula
-""".strip().format(local_summary=local_summary)
-
-    client = ollama.Client(host=OLLAMA_HOST)
     analysis_path = prepare_analysis_image(image_path)
-    response = client.generate(
-        model=MODEL,
-        prompt=prompt,
-        images=[str(analysis_path)],
-        options=MODEL_OPTIONS,
-        keep_alive=KEEP_ALIVE,
-    )
-    report = clean_model_response(response["response"])
-    normalized = merge_llm_and_forensics(report, forensic)
+    response_text, llm_source, llm_model = call_detailed_llm(prompt, analysis_path)
+    report = normalize_llm_response(response_text)
+    audit_result = run_clinical_audit(forensic, report, response_text, analysis_path)
+    normalized = merge_audit_and_forensics(report, audit_result, forensic)
     return {
         "verdict": normalized["verdict"],
         "report": normalized["report"],
         "duration_seconds": f"{time.perf_counter() - total_started:.2f}",
-        "source": "hibrido_local_llm",
+        "source": llm_source,
+        "model": llm_model,
+        "llm_raw_response": response_text,
+        "llm_initial_response": response_text,
+        "llm_audit_response": audit_result.get("llm_audit_response"),
+        "audit_status": audit_result.get("audit_status", "nao_executada"),
+        "audit_evidence": audit_result.get("audit_evidence", []),
         "forensic_score": forensic.score,
         "forensic_evidence": forensic.evidence,
+        "forensic_quality": forensic.metrics.get("quality_status"),
         "forensic_metrics": forensic.metrics,
     }
 
@@ -1431,11 +2176,24 @@ def save_uploaded_image(field: Any) -> Path:
 
 class PeritoHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
-        if self.path == "/history":
-            json_response(self, HTTPStatus.OK, {"history": load_history()})
+        parsed_url = urlparse(self.path)
+        request_path = parsed_url.path
+
+        if request_path == "/history":
+            query = parse_qs(parsed_url.query)
+            tab = (query.get("tab", ["all"])[0] or "all").strip().lower()
+            try:
+                page = int(query.get("page", ["1"])[0])
+            except (TypeError, ValueError):
+                page = 1
+            try:
+                page_size = int(query.get("page_size", [str(HISTORY_PAGE_SIZE)])[0])
+            except (TypeError, ValueError):
+                page_size = HISTORY_PAGE_SIZE
+            json_response(self, HTTPStatus.OK, paginated_history(tab, page, page_size))
             return
 
-        if self.path == "/metrics":
+        if request_path == "/metrics":
             json_response(
                 self,
                 HTTPStatus.OK,
@@ -1443,8 +2201,8 @@ class PeritoHandler(BaseHTTPRequestHandler):
             )
             return
 
-        if self.path.startswith("/uploads/"):
-            filename = Path(unquote(self.path.removeprefix("/uploads/"))).name
+        if request_path.startswith("/uploads/"):
+            filename = Path(unquote(request_path.removeprefix("/uploads/"))).name
             image_path = UPLOAD_DIR / filename
             if not image_path.exists() or image_path.suffix.lower() not in ALLOWED_EXTENSIONS:
                 self.send_error(HTTPStatus.NOT_FOUND, "Imagem nao encontrada")
@@ -1466,7 +2224,7 @@ class PeritoHandler(BaseHTTPRequestHandler):
             self.wfile.write(body)
             return
 
-        if self.path not in {"/", "/index.html"}:
+        if request_path not in {"/", "/index.html"}:
             self.send_error(HTTPStatus.NOT_FOUND, "Pagina nao encontrada")
             return
 
@@ -1530,10 +2288,13 @@ class PeritoHandler(BaseHTTPRequestHandler):
             result = calibrated_feedback_result(label)
             calibration = load_calibration()
             calibration_entry = dict(result["calibration_entry"])
-            calibration_entry["features"] = feature_profile(image_path)
+            forensic_metrics = local_metrics(image_path)
+            calibration_entry["features"] = feature_profile_from_metrics(forensic_metrics)
+            calibration_entry["quality_status"] = forensic_metrics.get("quality_status")
             calibration_entry["stored_filename"] = image_path.name
             calibration_entry["learned_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            forensic_metrics: dict[str, Any] = {}
+            result["forensic_metrics"] = forensic_metrics
+            result["forensic_quality"] = forensic_metrics.get("quality_status")
             if original_path is not None:
                 comparison = compare_with_original(image_path, original_path)
                 comparison_features = comparison_feature_profile(comparison)
@@ -1553,9 +2314,11 @@ class PeritoHandler(BaseHTTPRequestHandler):
                     else:
                         calibration_entry["justification"] = (
                             "A imagem foi marcada pelo usuario como modificada em comparacao com a original enviada."
-                        )
+                    )
                     original_entry = calibration_entry_for_label("REAL")
-                    original_entry["features"] = feature_profile(original_path)
+                    original_metrics = local_metrics(original_path)
+                    original_entry["features"] = feature_profile_from_metrics(original_metrics)
+                    original_entry["quality_status"] = original_metrics.get("quality_status")
                     original_entry["stored_filename"] = original_path.name
                     original_entry["learned_at"] = calibration_entry["learned_at"]
                     original_entry["paired_modified_sha256"] = file_sha256(image_path)
@@ -1567,6 +2330,7 @@ class PeritoHandler(BaseHTTPRequestHandler):
                 result["source"] = "feedback_usuario_comparacao"
                 result["forensic_evidence"] = [calibration_entry["evidence"]]
                 result["forensic_metrics"] = forensic_metrics
+                result["forensic_quality"] = forensic_metrics.get("quality_status")
                 refreshed_report = "\n".join(
                     [
                         f"VEREDITO: {calibration_entry['label']}",
@@ -1599,6 +2363,7 @@ class PeritoHandler(BaseHTTPRequestHandler):
                 "source": result["source"],
                 "forensic_score": result["forensic_score"],
                 "forensic_evidence": result["forensic_evidence"],
+                "forensic_quality": result.get("forensic_quality"),
                 "forensic_metrics": result.get("forensic_metrics", {}),
             }
             append_history(entry)
@@ -1613,6 +2378,9 @@ class PeritoHandler(BaseHTTPRequestHandler):
         except ollama.ResponseError as exc:
             json_response(self, HTTPStatus.BAD_GATEWAY, {"error": f"Erro do Ollama: {exc}"})
             return
+        except RuntimeError as exc:
+            json_response(self, HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
+            return
         except Exception as exc:
             json_response(self, HTTPStatus.INTERNAL_SERVER_ERROR, {"error": f"Erro inesperado: {exc}"})
             return
@@ -1626,14 +2394,20 @@ class PeritoHandler(BaseHTTPRequestHandler):
             "original_filename": Path(original_field.filename).name if original_path is not None else None,
             "original_stored_filename": original_path.name if original_path is not None else None,
             "original_image_url": f"/uploads/{original_path.name}" if original_path is not None else None,
-            "model": MODEL,
+            "model": result.get("model", MODEL),
             "verdict": result["verdict"],
             "report": result["report"],
             "duration_seconds": result.get("duration_seconds"),
             "source": result.get("source", "llm"),
             "forensic_score": result.get("forensic_score"),
             "forensic_evidence": result.get("forensic_evidence", []),
+            "forensic_quality": result.get("forensic_quality"),
             "forensic_metrics": result.get("forensic_metrics", {}),
+            "llm_raw_response": result.get("llm_raw_response"),
+            "llm_initial_response": result.get("llm_initial_response"),
+            "llm_audit_response": result.get("llm_audit_response"),
+            "audit_status": result.get("audit_status"),
+            "audit_evidence": result.get("audit_evidence", []),
         }
         append_history(entry)
         json_response(self, HTTPStatus.OK, {**result, "history_item": entry})
@@ -1650,7 +2424,7 @@ def main() -> int:
         save_history(load_history())
     server = ThreadingHTTPServer(("127.0.0.1", PORT), PeritoHandler)
     print(f"Pagina web: http://127.0.0.1:{PORT}")
-    print(f"Ollama: {OLLAMA_HOST} | Modelo: {MODEL}")
+    print(f"LLM detalhada: {LLM_PROVIDER} | Gemini: {GEMINI_MODEL} | Ollama: {OLLAMA_HOST} / {MODEL}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

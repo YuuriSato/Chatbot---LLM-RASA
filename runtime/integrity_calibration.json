@@ -168,5 +168,138 @@
     },
     "stored_filename": "d854dc95450c4036916bbe8090488e52.jpg",
     "learned_at": "2026-07-06 11:02:14"
+  },
+  "30926AF4A2F471E19B5B2E2435C67775A108BF21B6B81D38C07A3469EBD33267": {
+    "label": "IA_GERADA_EDITADA",
+    "confidence": "alta",
+    "score": 92,
+    "type": "IA",
+    "evidence": "rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "justification": "A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.",
+    "features": {
+      "ela_mean": 0.11516666666666665,
+      "ela_p95": 0.125,
+      "ela_block_cv": 0.17125,
+      "laplacian_log": 0.6583320507899802,
+      "sharpness_block_cv": 0.485,
+      "noise_mean": 0.17975,
+      "noise_block_cv": 0.340625,
+      "saturated_overlay": 0.0,
+      "marker_overlay": 0.0,
+      "green_marker": 0.0
+    },
+    "stored_filename": "c9ad465d48ad428cab72e96c6841444d.png",
+    "learned_at": "2026-07-07 16:37:35"
+  },
+  "DE4E176B2E30BD62A97E2903D3C5F10F66DDC1BA5AC0BB352D2F63C06EDBEB46": {
+    "label": "IA_GERADA_EDITADA",
+    "confidence": "alta",
+    "score": 92,
+    "type": "IA",
+    "evidence": "rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "justification": "A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.",
+    "features": {
+      "ela_mean": 0.10158333333333334,
+      "ela_p95": 0.09375,
+      "ela_block_cv": 0.2075,
+      "laplacian_log": 0.6156074396343565,
+      "sharpness_block_cv": 0.7577777777777778,
+      "noise_mean": 0.14775,
+      "noise_block_cv": 0.4175,
+      "saturated_overlay": 0.0,
+      "marker_overlay": 0.0,
+      "green_marker": 0.0
+    },
+    "stored_filename": "ee7c0b8edfd843c8b74251d6ceea9e0c.png",
+    "learned_at": "2026-07-08 09:34:39"
+  },
+  "18F7E04CAC5AF0EE7E045E058721F2CA1E199D047916324CDC53F8AFD4B1311E": {
+    "label": "IA_GERADA_EDITADA",
+    "confidence": "alta",
+    "score": 92,
+    "type": "IA",
+    "evidence": "rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "justification": "A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.",
+    "features": {
+      "ela_mean": 0.10866666666666668,
+      "ela_p95": 0.09375,
+      "ela_block_cv": 0.21874999999999997,
+      "laplacian_log": 0.5657347537391945,
+      "sharpness_block_cv": 0.5516666666666666,
+      "noise_mean": 0.12075,
+      "noise_block_cv": 0.39999999999999997,
+      "saturated_overlay": 0.0,
+      "marker_overlay": 0.0,
+      "green_marker": 0.0
+    },
+    "stored_filename": "0f37fe2b624343789a2a98af2b903648.png",
+    "learned_at": "2026-07-08 09:48:27"
+  },
+  "CE5AC51C3D4E0A39A841FDC386E9A249E4B5DC120A96279D4485472C62C322BD": {
+    "label": "IA_GERADA_EDITADA",
+    "confidence": "alta",
+    "score": 92,
+    "type": "IA",
+    "evidence": "rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "justification": "A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.",
+    "features": {
+      "ela_mean": 0.118,
+      "ela_p95": 0.125,
+      "ela_block_cv": 0.17687499999999998,
+      "laplacian_log": 0.6169063262320612,
+      "sharpness_block_cv": 0.5394444444444444,
+      "noise_mean": 0.178,
+      "noise_block_cv": 0.325,
+      "saturated_overlay": 0.0,
+      "marker_overlay": 0.0,
+      "green_marker": 0.0
+    },
+    "stored_filename": "8fdf3a10c42640e1b69b74eabc20e626.png",
+    "learned_at": "2026-07-08 10:03:18"
+  },
+  "3F9A3CC3EB4A9F8200BAD664C9FD0C0C3EADBAF4898424F7C7B37340AA9FB826": {
+    "label": "IA_GERADA_EDITADA",
+    "confidence": "alta",
+    "score": 92,
+    "type": "IA",
+    "evidence": "rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "justification": "A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.",
+    "features": {
+      "ela_mean": 0.22783333333333333,
+      "ela_p95": 0.25,
+      "ela_block_cv": 0.26499999999999996,
+      "laplacian_log": 0.9239316822948909,
+      "sharpness_block_cv": 0.5172222222222222,
+      "noise_mean": 0.733125,
+      "noise_block_cv": 0.31375,
+      "saturated_overlay": 0.189,
+      "marker_overlay": 0.243,
+      "green_marker": 0.0
+    },
+    "stored_filename": "25dcc9bc2e0544dcb5c8b5765e4d1971.png",
+    "learned_at": "2026-07-08 22:38:19"
+  },
+  "3D3FFB13EA3D4621D4B30C5193ECEEAAEB2743C6AE790BFBC011BF89580B4ADD": {
+    "label": "IA_GERADA_EDITADA",
+    "confidence": "alta",
+    "score": 92,
+    "type": "IA",
+    "evidence": "rotulo informado pelo usuario como imagem alterada/gerada por IA",
+    "justification": "A imagem foi marcada pelo usuario como exemplo de edicao ou geracao por IA.",
+    "features": {
+      "ela_mean": 0.09749999999999999,
+      "ela_p95": 0.09375,
+      "ela_block_cv": 0.09812499999999999,
+      "laplacian_log": 0.5470403624071504,
+      "sharpness_block_cv": 0.6011111111111112,
+      "noise_mean": 0.114125,
+      "noise_block_cv": 0.49125,
+      "saturated_overlay": 0.0,
+      "marker_overlay": 0.0,
+      "green_marker": 0.0
+    },
+    "quality_status": "boa",
+    "stored_filename": "1eed5c04bf474d66be492905b39a4434.png",
+    "learned_at": "2026-07-09 15:31:10"
   }
 }

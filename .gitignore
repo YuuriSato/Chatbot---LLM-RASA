@@ -9,3 +9,4 @@ runtime/outputs/
 .env
 .DS_Store
 Thumbs.db
+*.zip
